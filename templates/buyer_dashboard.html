@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3>Welcome to the Buyer Dashboard</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>As a buyer, you can browse the list of available cars, filter by preferences, and make inquiries about the vehicles.</p>
+
+                        <!-- Filter Form -->
+                        <form method="POST" action="/buyer_dashboard">
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <select name="location" id="location" class="form-control">
+                                    <option value="any">Any</option>
+                                    {% for location in locations %}
+                                        <option value="{{ location }}">{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuel_type">Fuel Type:</label>
+                                <select name="fuel_type" id="fuel_type" class="form-control">
+                                    <option value="any">Any</option>
+                                    {% for fuel_type in fuel_types %}
+                                        <option value="{{ fuel_type }}">{{ fuel_type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transmission">Transmission:</label>
+                                <select name="transmission" id="transmission" class="form-control">
+                                    <option value="any">Any</option>
+                                    {% for transmission in transmissions %}
+                                        <option value="{{ transmission }}">{{ transmission }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        </form>
+
+                        <h5>Available Cars</h5>
+                        <ul>
+                            {% if cars %}
+                                {% for car in cars %}
+                                    <li>{{ car.model }} - {{ car.year }} - &#8377;{{ car.price }} - {{ car.location }} - {{ car.fuel_type }} - {{ car.transmission }}</li>
+                                {% endfor %}
+                            {% else %}
+                                <li>No cars found with the selected filters.</li>
+                            {% endif %}
+                        </ul>
+
+                        <a href="/logout" class="btn btn-danger">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

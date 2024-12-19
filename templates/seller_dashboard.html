@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3>Welcome to the Seller Dashboard</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display success or error message -->
+                        {% if message %}
+                            <div class="alert alert-info" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+
+                        <p>Use the form below to add your car details.</p>
+
+                        <!-- Add Car Form -->
+                        <form method="POST" action="/seller_dashboard">
+                            <div class="form-group">
+                                <label for="car_name">Car Name:</label>
+                                <input type="text" id="car_name" name="car_name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="year">Year:</label>
+                                <input type="number" id="year" name="year" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Price (₹):</label>
+                                <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <input type="text" id="location" name="location" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuel_type">Fuel Type:</label>
+                                <select id="fuel_type" name="fuel_type" class="form-control" required>
+                                    <option value="Petrol">Petrol</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="Electric">Electric</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transmission">Transmission:</label>
+                                <select id="transmission" name="transmission" class="form-control" required>
+                                    <option value="Manual">Manual</option>
+                                    <option value="Automatic">Automatic</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Car</button>
+                        </form>
+
+                        <a href="/logout" class="btn btn-danger mt-3">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
