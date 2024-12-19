@@ -63,4 +63,11 @@ def seller_dashboard():
 
 
 
-S
+user database
+        CREATE TABLE users (
+            id INT AUTO_INCREMENT PRIMARY KEY,         -- Unique ID for each user
+            username VARCHAR(150) NOT NULL,            -- Username
+            email VARCHAR(150) NOT NULL UNIQUE,        -- Email (must be unique)
+            password VARCHAR(255) NOT NULL,            -- Password (hashed)
+            role ENUM('buyer', 'seller') NOT NULL      -- Role: buyer or seller
+        );

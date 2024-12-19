@@ -1,13 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import check_password_hash
 import pandas as pd
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-        # 1
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database setup
-# db = SQLAlchemy(app)
 
 # MySQL Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/cardb'  # Update with your MySQL credentials
@@ -15,14 +11,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # User model
-        # 1
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     username = db.Column(db.String(150), nullable=False, unique=True)
-#     email = db.Column(db.String(150), nullable=False, unique=True)
-#     password = db.Column(db.String(200), nullable=False)  # Hashed passwords
-#     role = db.Column(db.String(50), nullable=False)  # "buyer" or "seller"
-
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)  # Store hashed passwords
+    role = db.Column(db.Enum('buyer', 'seller', name='user_roles'), nullable=False)
 
 
 # Car model representing the cars table
@@ -62,17 +57,6 @@ def login():
 
     return render_template('login.html')
 
-# Placeholder route for buyer dashboard
-        # 1.
-# @app.route('/buyer_dashboard')
-# def buyer_dashboard():
-#     # Example cars to display (you can pull from your database)
-#     cars = [
-#         {"model": "Car 1", "year": "2020", "price": "20000"},
-#         {"model": "Car 2", "year": "2021", "price": "25000"},
-#         {"model": "Car 3", "year": "2022", "price": "30000"}
-#     ]
-#     return render_template('buyer_dashboard.html', cars=cars)
 
 
 @app.route('/buyer_dashboard', methods=['GET', 'POST'])
@@ -160,6 +144,41 @@ def seller_dashboard():
                 message = f"An error occurred: {str(e)}"
 
     return render_template('seller_dashboard.html', message=message)
+
+import logging
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    try:
+        if request.method == 'POST':
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
+            role = request.form['role']
+
+            # Validate input
+            if not username or not email or not password or not role:
+                flash("All fields are required!", "danger")
+                return redirect('/register')
+
+            # Check if email already exists
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                flash("Email is already registered!", "danger")
+                return redirect('/register')
+
+            # Add user to database
+            new_user = User(username=username, email=email, password=password, role=role)
+            db.session.add(new_user)
+            db.session.commit()
+
+            return redirect('/login')
+
+    except Exception as e:
+        logging.error(f"Error during registration: {e}")
+        flash("An unexpected error occurred. Please try again later.", "danger")
+
+    return render_template('register.html')
 
 
 # Route for logging out
