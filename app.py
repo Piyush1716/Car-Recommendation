@@ -40,12 +40,11 @@ def login():
         password = request.form['password']
         role = request.form['role']  # Buyer or Seller
 
-        # user = User.query.filter_by(email=email, role=role).first()
+        user = User.query.filter_by(email=email, role=role).first()
 
-        if True:
-        # if user and check_password_hash(user.password, password):
-        #     session['user_id'] = user.id
-        #     session['role'] = user.role
+        if user and user.password == password:
+            # session['user_id'] = user.id
+            # session['role'] = user.role
 
             # Redirect based on role
             if role == 'buyer':
