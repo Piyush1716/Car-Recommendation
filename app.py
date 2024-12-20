@@ -1,9 +1,22 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
+from flask_mail import Message, Mail
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
+# Flask-Mail Configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'ww17161716@gmail.com'  # Sender's email
+app.config['MAIL_PASSWORD'] = 'kdth avtu poge wdak'  # Sender's app password
+app.config['MAIL_DEFAULT_SENDER'] = 'ww17161716@gmail.com'  # Default sender email
+
+# Initialize Flask-Mail
+mail = Mail(app)
 
 # MySQL Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/cardb'  # Update with your MySQL credentials
@@ -70,6 +83,7 @@ def buyer_dashboard():
             'location': car.location,
             'fuel_type': car.fuel_type,
             'transmission': car.transmission,
+            'seller_email' : car.seller_email
         }
         for car in cars_query
     ]
@@ -116,6 +130,55 @@ def cars():
     
     # Pass the cars info to the template
     return render_template('cars.html', cars=cars)
+
+
+@app.route('/contact_seller', methods=['POST'])
+def contact_seller():
+
+    buyer_email = session['email']
+    seller_email = request.form['seller_email']
+    car_model = request.form['car_model']
+
+    # Retrieve the seller's name (assuming User model has a 'name' attribute)
+    user = User.query.filter_by(email=seller_email).first()
+    user_name = user.username if user else "Seller"
+
+    # Subject and body
+    subject = "Inquiry Received for Your Car Listing on Cars4you.com"
+
+
+    # Create the email message
+    msg = Message(subject, recipients=[seller_email])
+    msg.html = f"""
+                <html>
+                <body>
+                    <p>Dear {user_name},</p>
+                    <p>We are excited to inform you that a buyer is interested in your car listing:</p>
+                    <ul>
+                    <li><strong>Car Model</strong>: {car_model}</li>
+                    </ul>
+                    <p>Here are the buyer's contact details for your reference:</p>
+                    <ul>
+                    <li><strong>Email</strong>: {buyer_email}</li>
+                    </ul>
+                    <p>We recommend contacting the buyer promptly to discuss further details and finalize the deal.</p>
+                    <p>If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:support@cars4you.com">support@cars4you.com</a>.</p>
+                    <p>Thank you for choosing Cars4you.com to sell your vehicle.</p>
+                    <p>Best regards,</p>
+                    <p><strong>The Cars4you Team</strong></p>
+                    <p><a href="https://www.cars4you.com">Cars4you.com</a></p>
+                </body>
+                </html>
+                """
+    
+    try:
+        mail.send(msg)
+        flash('Email sent successfully!', 'success')
+    except Exception as e:
+        flash(f'Error sending email: {str(e)}', 'danger')
+
+    return redirect(url_for('buyer_dashboard'))
+
 
 # Placeholder route for seller dashboard
 @app.route('/seller_dashboard', methods=['GET', 'POST'])
