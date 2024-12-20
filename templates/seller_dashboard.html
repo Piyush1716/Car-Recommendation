@@ -61,6 +61,45 @@
                             <button type="submit" class="btn btn-primary">Add Car</button>
                         </form>
 
+                        <hr>
+
+                        <h4 class="mt-4">Your Cars</h4>
+                        <!-- Display list of cars added by the seller -->
+                        {% if cars %}
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Car Name</th>
+                                        <th>Year</th>
+                                        <th>Price</th>
+                                        <th>Location</th>
+                                        <th>Fuel Type</th>
+                                        <th>Transmission</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for car in cars %}
+                                        <tr>
+                                            <td>{{ car.model }}</td>
+                                            <td>{{ car.year }}</td>
+                                            <td>&#8377;{{ car.price }}</td>
+                                            <td>{{ car.location }}</td>
+                                            <td>{{ car.fuel_type }}</td>
+                                            <td>{{ car.transmission }}</td>
+                                            <td>
+                                                <!-- Edit and Delete buttons -->
+                                                <a href="/edit_car/{{ car.id }}" class="btn btn-warning btn-sm">Edit</a>
+                                                <a href="/delete_car/{{ car.id }}" class="btn btn-danger btn-sm">Delete</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>No cars listed yet.</p>
+                        {% endif %}
+
                         <a href="/logout" class="btn btn-danger mt-3">Logout</a>
                     </div>
                 </div>

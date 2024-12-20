@@ -18,7 +18,7 @@ class User(db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)  # Store hashed passwords
     role = db.Column(db.Enum('buyer', 'seller', name='user_roles'), nullable=False)
-
+    
 
 # Car model representing the cars table
 class Car(db.Model):
@@ -29,9 +29,8 @@ class Car(db.Model):
     price = db.Column(db.Float, nullable=False)
     location = db.Column(db.String(100), nullable=False)
     fuel_type = db.Column(db.String(50), nullable=False)
-    transmission = db.Column(db.String(50), nullable=False)
-
-
+    transmission = db.Column(db.String(50), nullable=False) 
+    seller_email = db.Column(db.String(150), nullable=False)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -43,8 +42,8 @@ def login():
         user = User.query.filter_by(email=email, role=role).first()
 
         if user and user.password == password:
-            # session['user_id'] = user.id
-            # session['role'] = user.role
+            session['email'] = email
+            session['role'] = user.role
 
             # Redirect based on role
             if role == 'buyer':
@@ -123,8 +122,14 @@ def cars():
 def seller_dashboard():
     message = None  # Default message
 
+    if 'email' not in session:
+        # If no user is logged in, redirect to login page
+        return redirect(url_for('login'))
+
+    seller_email = session['email']  # Get the logged-in user's email
+
     if request.method == 'POST':
-        # Get form data
+        # Get form data for adding a new car
         model = request.form.get('car_name')
         year = request.form.get('year')
         price = request.form.get('price')
@@ -144,7 +149,8 @@ def seller_dashboard():
                     price=float(price),
                     location=location,
                     fuel_type=fuel_type,
-                    transmission=transmission
+                    transmission=transmission,
+                    seller_email=seller_email  # Assign the logged-in seller's email
                 )
                 db.session.add(new_car)
                 db.session.commit()
@@ -153,9 +159,11 @@ def seller_dashboard():
                 # Handle database errors
                 message = f"An error occurred: {str(e)}"
 
-    return render_template('seller_dashboard.html', message=message)
+    # Fetch cars listed by the logged-in seller
+    seller_cars = Car.query.filter_by(seller_email=seller_email).all()
 
-import logging
+    return render_template('seller_dashboard.html', message=message, cars=seller_cars)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
