@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 
@@ -163,6 +163,31 @@ def seller_dashboard():
     seller_cars = Car.query.filter_by(seller_email=seller_email).all()
 
     return render_template('seller_dashboard.html', message=message, cars=seller_cars)
+
+@app.route('/delete_car/<int:car_id>', methods=['GET'])
+def delete_car(car_id):
+
+    # If no user is logged in, redirect to login page
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    # Fetch the car from the database by its ID
+    car = Car.query.get_or_404(car_id)
+    
+    # Get the email of the currently logged-in user from the session
+    current_seller_email = session['email']
+    
+    # Check if the logged-in user's email matches the car's seller_email
+    if car.seller_email != current_seller_email:
+        abort(403)  # If not, prevent deletion and show 403 Forbidden error
+    
+    # If the emails match, proceed with deletion
+    db.session.delete(car)
+    db.session.commit()
+    flash("Car deleted successfully!", "info")
+    
+    # Redirect back to the seller dashboard
+    return redirect(url_for('seller_dashboard'))
 
 
 @app.route('/register', methods=['GET', 'POST'])

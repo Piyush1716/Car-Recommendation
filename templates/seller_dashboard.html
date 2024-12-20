@@ -22,6 +22,14 @@
                             </div>
                         {% endif %}
 
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                <div class="alert alert-{{ messages[0][0] }} mt-3" role="alert">
+                                    {{ messages[0][1] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
                         <p>Use the form below to add your car details.</p>
 
                         <!-- Add Car Form -->
