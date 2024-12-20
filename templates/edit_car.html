@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Car</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3>Edit Car Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display flash messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                <div class="alert alert-{{ messages[0][0] }} mt-3" role="alert">
+                                    {{ messages[0][1] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('edit_car', car_id=car.id) }}">
+                            <div class="form-group">
+                                <label for="car_name">Car Name:</label>
+                                <input type="text" id="car_name" name="car_name" class="form-control" value="{{ car.model }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="year">Year:</label>
+                                <input type="number" id="year" name="year" class="form-control" value="{{ car.year }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Price (₹):</label>
+                                <input type="number" id="price" name="price" class="form-control" value="{{ car.price }}" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <input type="text" id="location" name="location" class="form-control" value="{{ car.location }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuel_type">Fuel Type:</label>
+                                <select id="fuel_type" name="fuel_type" class="form-control" required>
+                                    <option value="Petrol" {% if car.fuel_type == 'Petrol' %} selected {% endif %}>Petrol</option>
+                                    <option value="Diesel" {% if car.fuel_type == 'Diesel' %} selected {% endif %}>Diesel</option>
+                                    <option value="Electric" {% if car.fuel_type == 'Electric' %} selected {% endif %}>Electric</option>
+                                    <option value="Hybrid" {% if car.fuel_type == 'Hybrid' %} selected {% endif %}>Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transmission">Transmission:</label>
+                                <select id="transmission" name="transmission" class="form-control" required>
+                                    <option value="Manual" {% if car.transmission == 'Manual' %} selected {% endif %}>Manual</option>
+                                    <option value="Automatic" {% if car.transmission == 'Automatic' %} selected {% endif %}>Automatic</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Car</button>
+                        </form>
+
+                        <a href="{{ url_for('seller_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

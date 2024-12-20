@@ -189,6 +189,43 @@ def delete_car(car_id):
     # Redirect back to the seller dashboard
     return redirect(url_for('seller_dashboard'))
 
+@app.route('/edit_car/<int:car_id>', methods=['GET', 'POST'])
+def edit_car(car_id):
+
+    # If no user is logged in, redirect to login page
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    # Fetch the car from the database by its ID
+    car = Car.query.get_or_404(car_id)
+    
+    # Get the email of the currently logged-in user from the session
+    current_seller_email = session['email']
+
+    # Verify if the logged-in user's email matches the car's seller_email
+    if car.seller_email != current_seller_email:
+        abort(403)  # If not, prevent editing and show 403 Forbidden error
+    
+    # Handle form submission (POST request)
+    if request.method == 'POST':
+        car.model = request.form['car_name']
+        car.year = request.form['year']
+        car.price = request.form['price']
+        car.location = request.form['location']
+        car.fuel_type = request.form['fuel_type']
+        car.transmission = request.form['transmission']
+
+        # Commit the changes to the database
+        db.session.commit()
+        
+        # Flash success message
+        flash("Car details updated successfully!", "success")
+        
+        # Redirect to the seller dashboard after updating
+        return redirect(url_for('seller_dashboard'))
+
+    # Handle GET request (render the edit form)
+    return render_template('edit_car.html', car=car)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
