@@ -96,8 +96,11 @@ def buyer_dashboard():
         if transmission_filter and transmission_filter != 'any':
             filtered_cars = filtered_cars[filtered_cars['transmission'] == transmission_filter]
 
+
+    #showing only fisrt 10 cars
+    top10 = filtered_cars.head(10)
     # Convert the filtered DataFrame back to a list of dictionaries for the template
-    cars = filtered_cars.to_dict(orient='records')
+    cars = top10.to_dict(orient='records')
 
     return render_template(
         'buyer_dashboard.html',
