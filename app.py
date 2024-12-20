@@ -106,6 +106,14 @@ def buyer_dashboard():
         fuel_types=fuel_types,
         transmissions=transmissions
     )
+# To View all Cars
+@app.route('/cars', methods=['GET'])
+def cars():    
+    # Query the cars table
+    cars = Car.query.all()
+    
+    # Pass the cars info to the template
+    return render_template('cars.html', cars=cars)
 
 # Placeholder route for seller dashboard
 @app.route('/seller_dashboard', methods=['GET', 'POST'])
@@ -185,6 +193,7 @@ def register():
 def logout():
     session.clear()  # Clear the session
     return redirect(url_for('login'))  # Redirect to login page
+
 
 
 if __name__ == "__main__":
