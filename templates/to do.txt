@@ -1,81 +1,16 @@
-login.html
-    add required in input
-
-app.py 
-    remove comments 
-        like for daa base connect.. 
-        password check..
-
-
-seller dash boardwith session
-    @app.route('/seller_dashboard', methods=['GET', 'POST'])
-def seller_dashboard():
-    if 'user_id' not in session or session.get('role') != 'seller':
-        # Ensure only logged-in sellers can access this route
-        flash("You need to log in as a seller to access this page.", "danger")
-        return redirect(url_for('login'))
-
-    seller_id = session['user_id']  # Fetch the logged-in seller's ID
-
-    if request.method == 'POST':
-        # Get form data
-        model = request.form.get('car_name')
-        year = request.form.get('year')
-        price = request.form.get('price')
-        location = request.form.get('location')
-        fuel_type = request.form.get('fuel_type')
-        transmission = request.form.get('transmission')
-
-        if not all([model, year, price, location, fuel_type, transmission]):
-            flash("All fields are required to add a car.", "danger")
-        else:
-            # Save the new car to the database
-            new_car = Car(
-                model=model,
-                year=int(year),
-                price=float(price),
-                location=location,
-                fuel_type=fuel_type,
-                transmission=transmission
-            )
-            db.session.add(new_car)
-            db.session.commit()
-            flash("Car added successfully!", "success")
-
-    # Fetch all cars added by the seller
-    seller_cars = Car.query.filter_by(seller_id=seller_id).all()
-
-    # Convert seller cars to a format usable in the template
-    cars = [
-        {
-            'model': car.model,
-            'year': car.year,
-            'price': car.price,
-            'location': car.location,
-            'fuel_type': car.fuel_type,
-            'transmission': car.transmission,
-        }
-        for car in seller_cars
-    ]
-
-    return render_template('seller_dashboard.html', cars=cars)
-
-
-
-
-user database
-        CREATE TABLE users (
-            id INT AUTO_INCREMENT PRIMARY KEY,         -- Unique ID for each user
-            username VARCHAR(150) NOT NULL,            -- Username
-            email VARCHAR(150) NOT NULL UNIQUE,        -- Email (must be unique)
-            password VARCHAR(255) NOT NULL,            -- Password (hashed)
-            role ENUM('buyer', 'seller') NOT NULL      -- Role: buyer or seller
-        );
-
-
-
 
 add 10 20 50 paginatoion option in car.html ot car route
 
-
 replace availble cars option from buyers dashboard then add most search cars in database.
+
+Potential Features Missing or in Progress:
+
+Advanced recommendation algorithms (e.g., machine learning-based suggestions).
+Wishlist or cart management.
+More detailed analytics or visualizations for users.
+Enhancements in security (e.g., hashed passwords, secure sessions).
+
+
+
+Collaborative Filtering in Machine Learning
+https://www.geeksforgeeks.org/collaborative-filtering-ml/

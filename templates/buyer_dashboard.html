@@ -27,7 +27,6 @@
                                 </div>
                             {% endif %}
                         {% endwith %}
-
                     </div>
                     <div class="card-body">
                         <p>As a buyer, you can browse the list of available cars, filter by preferences, and make inquiries about the vehicles.</p>
@@ -64,17 +63,44 @@
                             <button type="submit" class="btn btn-primary">Apply Filters</button>
                         </form>
 
-                        <h5>Available Top 10 Cars</h5>
+                        <!-- View Buttons -->
+                        <div class="d-flex justify-content-around mt-3">
+                            <a href="/view_whitelist" class="btn btn-outline-primary">View Whitelist</a>
+                            <a href="/view_cart" class="btn btn-outline-warning">View Cart</a>
+                        </div>
+
+                        <h5 class="mt-4">Available Top 10 Cars</h5>
                         <ul class="list-group">
                             {% if cars %}
                                 {% for car in cars %}
                                     <li class="list-group-item">
                                         <strong>{{ car.model }}</strong> - {{ car.year }} - &#8377;{{ car.price }} - {{ car.location }} - {{ car.fuel_type }} - {{ car.transmission }}
-                                        <form method="POST" action="/contact_seller" class="mt-2">
-                                            <input type="hidden" name="seller_email" value="{{ car.seller_email }}">
-                                            <input type="hidden" name="car_model" value="{{ car.model }}">
-                                            <button type="submit" class="btn btn-info btn-sm">Contact Seller</button>
-                                        </form>
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <!-- Like Button -->
+                                            <form method="POST" action="/interaction">
+                                                <input type="hidden" name="interaction_type" value="like">
+                                                <input type="hidden" name="car_id" value="{{ car.id }}">
+                                                <button type="submit" class="btn btn-outline-primary btn-sm">Like</button>
+                                            </form>
+                                            <!-- Shortlist Button -->
+                                            <form method="POST" action="/interaction">
+                                                <input type="hidden" name="interaction_type" value="shortlist">
+                                                <input type="hidden" name="car_id" value="{{ car.id }}">
+                                                <button type="submit" class="btn btn-outline-warning btn-sm">Shortlist</button>
+                                            </form>
+                                            <!-- View Button -->
+                                            <form method="POST" action="/interaction">
+                                                <input type="hidden" name="interaction_type" value="view">
+                                                <input type="hidden" name="car_id" value="{{ car.id }}">
+                                                <button type="submit" class="btn btn-outline-info btn-sm">View</button>
+                                            </form>
+                                            <!-- Contact Seller Button -->
+                                            <form method="POST" action="/contact_seller">
+                                                <input type="hidden" name="seller_email" value="{{ car.seller_email }}">
+                                                <input type="hidden" name="car_model" value="{{ car.model }}">
+                                                <button type="submit" class="btn btn-outline-success btn-sm">Contact Seller</button>
+                                            </form>
+                                        </div>
                                     </li>
                                 {% endfor %}
                             {% else %}
@@ -94,6 +120,5 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 </body>
 </html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ car.model }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="/static/no_image_available.png" alt="No Image Available" class="img-fluid mb-4">
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Year:</strong> {{ car.year }}</li>
+                    <li class="list-group-item"><strong>Price:</strong> &#8377;{{ car.price }}</li>
+                    <li class="list-group-item"><strong>Location:</strong> {{ car.location }}</li>
+                    <li class="list-group-item"><strong>Fuel Type:</strong> {{ car.fuel_type }}</li>
+                    <li class="list-group-item"><strong>Transmission:</strong> {{ car.transmission }}</li>
+                </ul>
+                <a href="{{ url_for('buyer_dashboard') }}" class="btn btn-primary mt-4">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

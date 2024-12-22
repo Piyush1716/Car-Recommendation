@@ -23,7 +23,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/cardb' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# User model
+# User model representing the users table
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -32,7 +32,6 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)  # Store hashed passwords
     role = db.Column(db.Enum('buyer', 'seller', name='user_roles'), nullable=False)
     
-
 # Car model representing the cars table
 class Car(db.Model):
     __tablename__ = 'cars'
@@ -44,6 +43,28 @@ class Car(db.Model):
     fuel_type = db.Column(db.String(50), nullable=False)
     transmission = db.Column(db.String(50), nullable=False) 
     seller_email = db.Column(db.String(150), nullable=False)
+
+# UserCarInteraction model representing the UserCarInterractions (inter) table
+class UserCarInteraction(db.Model):
+    __tablename__ = 'inter'
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(150), db.ForeignKey('users.email'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    weight = db.Column(db.Integer, nullable=False)  # Represents the interaction weight
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+# Manages Cart and Whitelist
+class UserInteraction(db.Model):
+    __tablename__ = 'user_interactions'
+    id = db.Column(db.Integer, primary_key=True)
+    buyer_email = db.Column(db.String(255), db.ForeignKey('users.email'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    in_cart = db.Column(db.Boolean, default=False)
+    in_whitelist = db.Column(db.Boolean, default=False)
+
+@app.route('/', methods = ['GET','POST'])
+def index():
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -69,7 +90,7 @@ def login():
     return render_template('login.html')
 
 
-
+# Buyers dashboard
 @app.route('/buyer_dashboard', methods=['GET', 'POST'])
 def buyer_dashboard():
     # Query all cars and convert to Pandas DataFrame
@@ -131,7 +152,7 @@ def cars():
     # Pass the cars info to the template
     return render_template('cars.html', cars=cars)
 
-
+# Contect seller via Email
 @app.route('/contact_seller', methods=['POST'])
 def contact_seller():
 
@@ -150,26 +171,27 @@ def contact_seller():
     # Create the email message
     msg = Message(subject, recipients=[seller_email])
     msg.html = f"""
-                <html>
-                <body>
-                    <p>Dear {user_name},</p>
-                    <p>We are excited to inform you that a buyer is interested in your car listing:</p>
-                    <ul>
-                    <li><strong>Car Model</strong>: {car_model}</li>
-                    </ul>
-                    <p>Here are the buyer's contact details for your reference:</p>
-                    <ul>
-                    <li><strong>Email</strong>: {buyer_email}</li>
-                    </ul>
-                    <p>We recommend contacting the buyer promptly to discuss further details and finalize the deal.</p>
-                    <p>If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:support@cars4you.com">support@cars4you.com</a>.</p>
-                    <p>Thank you for choosing Cars4you.com to sell your vehicle.</p>
-                    <p>Best regards,</p>
-                    <p><strong>The Cars4you Team</strong></p>
-                    <p><a href="https://www.cars4you.com">Cars4you.com</a></p>
-                </body>
-                </html>
-                """
+    <html>
+    <body>
+        <p>Dear {user_name},</p>
+        <p>We are excited to inform you that a buyer is interested in your car listing:</p>
+        <ul>
+        <li><strong>Car Model</strong>: {car_model}</li>
+        </ul>
+        <p>Here are the buyer's contact details for your reference:</p>
+        <ul>
+        <li><strong>Email</strong>: {buyer_email}</li>
+        </ul>
+        <p>We recommend contacting the buyer promptly to discuss further details and finalize the deal.</p>
+        <p>If you have any questions or need assistance, feel free to reach out to our support team at 
+        <a href="mailto:support@cars4you.com">support@cars4you.com</a>.</p>
+        <p>Thank you for choosing Cars4you.com to sell your vehicle.</p>
+        <p>Best regards,</p>
+        <p><strong>The Cars4you Team</strong></p>
+        <p><a href="https://www.cars4you.com">Cars4you.com</a></p>
+    </body>
+    </html>
+    """
     
     try:
         mail.send(msg)
@@ -178,6 +200,80 @@ def contact_seller():
         flash(f'Error sending email: {str(e)}', 'danger')
 
     return redirect(url_for('buyer_dashboard'))
+
+# Handel User Interaction
+@app.route('/interaction', methods=['POST'])
+def interaction():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+    car_id = request.form['car_id']
+    interaction_type = request.form['interaction_type']
+
+    # Handle the interaction types
+    if interaction_type == 'like':
+        # Add the car to the user's favorites or Whitelist
+        usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=5)
+        userinteraction = UserInteraction(buyer_email=user_email,car_id=car_id,in_whitelist=True)
+        db.session.add(userinteraction)
+        db.session.add(usercarinteraction)
+        db.session.commit()
+        flash("Car added to your favorites!", "success")
+    
+    elif interaction_type == 'shortlist':
+        # Add the car to the user's cart 
+        usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=10)
+        userinteraction = UserInteraction(buyer_email=user_email,car_id=car_id,in_cart=True)
+        db.session.add(userinteraction)
+        db.session.add(usercarinteraction)
+        db.session.commit()
+        flash("Car added to your cart!", "success")
+    
+    elif interaction_type == 'view':
+        # Redirect to the car details page
+        usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=1)
+        db.session.add(usercarinteraction)
+        db.session.commit()
+        return redirect(url_for('car_details', car_id=car_id))
+
+    return redirect(url_for('buyer_dashboard'))
+
+# Route to display whitelist
+@app.route('/view_whitelist', methods=['GET'])
+def view_whitelist():
+    # Get logged-in user's email
+    buyer_email = session['email']
+    if not buyer_email:
+        flash("Please log in to view your whitelist.", "warning")
+        return redirect(url_for('login'))
+
+    # Fetch cars in the whitelist for the logged-in user
+    whitelist = db.session.query(Car).join(UserInteraction, Car.id == UserInteraction.car_id)\
+        .filter(UserInteraction.buyer_email == buyer_email, UserInteraction.in_whitelist == True).all()
+
+    return render_template('whitelist.html', whitelist=whitelist)
+
+# Route to display cart
+@app.route('/view_cart', methods=['GET'])
+def view_cart():
+    # Get logged-in user's email
+    buyer_email = session['email']
+    if not buyer_email:
+        flash("Please log in to view your cart.", "warning")
+        return redirect(url_for('login'))
+
+    # Fetch cars in the cart for the logged-in user
+    cart = db.session.query(Car).join(UserInteraction, Car.id == UserInteraction.car_id)\
+        .filter(UserInteraction.buyer_email == buyer_email, UserInteraction.in_cart == True).all()
+
+    return render_template('cart.html', cart=cart)
+
+
+@app.route('/car_details/<int:car_id>', methods=['GET'])
+def car_details(car_id):
+    car = Car.query.get_or_404(car_id)  # Fetch car details from the database
+    return render_template('car_details.html', car=car)
 
 
 # Placeholder route for seller dashboard
