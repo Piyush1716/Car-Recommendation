@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from flask_mail import Message, Mail
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -302,6 +303,73 @@ def view_cart():
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)  # Fetch car details from the database
     return render_template('car_details.html', car=car)
+
+# Our recommendation Modual
+@app.route('/recommendations', methods=['GET'])
+def recommendations():
+    if 'email' not in session:
+        flash("Please log in to get recommendations.", "warning")
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+
+    # Step 1: Fetch user interaction data using the UserCarInteraction model
+    interactions = UserCarInteraction.query.all()
+    interaction_list = [
+        {
+            'user_email': inter.user_email,
+            'car_id': inter.car_id,
+            'weight': inter.weight
+        }
+        for inter in interactions
+    ]
+
+    # Convert interaction data into a pandas DataFrame
+    interaction_df = pd.DataFrame(interaction_list)
+
+    if interaction_df.empty:
+        flash("No interaction data available for recommendations.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    # Step 2: Create a user-item interaction matrix
+    interaction_matrix = interaction_df.pivot_table(index='user_email', columns='car_id', values='weight', fill_value=0)
+
+    # Step 3: Compute similarity matrix
+    similarity_matrix = cosine_similarity(interaction_matrix)
+    user_similarity = pd.DataFrame(similarity_matrix, index=interaction_matrix.index, columns=interaction_matrix.index)
+
+    # Step 4: Generate recommendations for the logged-in user
+    def recommend_cars_for_user(user_email, num_recommendations=5):
+        if user_email not in interaction_matrix.index:
+            return []
+
+        # Get similarity scores for the user
+        similar_users = user_similarity[user_email].sort_values(ascending=False)
+
+        # Weighted sum of car interactions from similar users
+        weighted_scores = pd.Series(0, index=interaction_matrix.columns)
+        for other_user, similarity in similar_users.items():
+            if other_user == user_email:
+                continue
+            weighted_scores += similarity * interaction_matrix.loc[other_user]
+
+        # Exclude cars the user already interacted with
+        interacted_cars = interaction_matrix.loc[user_email]
+        weighted_scores = weighted_scores[interacted_cars == 0]
+
+        # Recommend the top cars
+        return weighted_scores.nlargest(num_recommendations).index.tolist()
+
+    recommended_car_ids = recommend_cars_for_user(user_email)
+
+    # Step 5: Fetch car details for the recommended car IDs using the Car model
+    if not recommended_car_ids:
+        flash("No recommendations available at this time.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    recommended_cars = Car.query.filter(Car.id.in_(recommended_car_ids)).all()
+
+    return render_template('recommendations.html', cars=recommended_cars)
 
 
 # Placeholder route for seller dashboard
