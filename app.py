@@ -201,7 +201,7 @@ def contact_seller():
 
     return redirect(url_for('buyer_dashboard'))
 
-# Handel User Interaction
+# Handle User Interaction
 @app.route('/interaction', methods=['POST'])
 def interaction():
     if 'email' not in session:
@@ -213,23 +213,51 @@ def interaction():
 
     # Handle the interaction types
     if interaction_type == 'like':
-        # Add the car to the user's favorites or Whitelist
-        usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=5)
-        userinteraction = UserInteraction(buyer_email=user_email,car_id=car_id,in_whitelist=True)
-        db.session.add(userinteraction)
-        db.session.add(usercarinteraction)
-        db.session.commit()
-        flash("Car added to your favorites!", "success")
-    
+        # Check if the car is already in the whitelist
+        existing_interaction = UserInteraction.query.filter_by(
+            buyer_email=user_email, car_id=car_id
+        ).first()
+
+        if existing_interaction:
+            if existing_interaction.in_whitelist:  # checks if cars is already in whitelist
+                flash("Car is already in your favorites!", "info")
+            else:   # car is already in cart beacause record alredy exits , so just change in_whitelist = true
+                existing_interaction.in_whitelist = True
+                usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=5) # also add interaction weight
+                db.session.add(usercarinteraction)
+                db.session.commit()
+                flash("Car added to your favorites!", "success")
+        else:
+            usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=5)
+            userinteraction = UserInteraction(buyer_email=user_email, car_id=car_id, in_whitelist=True)
+            db.session.add(userinteraction)
+            db.session.add(usercarinteraction)
+            db.session.commit()
+            flash("Car added to your favorites!", "success")
+
     elif interaction_type == 'shortlist':
-        # Add the car to the user's cart 
-        usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=10)
-        userinteraction = UserInteraction(buyer_email=user_email,car_id=car_id,in_cart=True)
-        db.session.add(userinteraction)
-        db.session.add(usercarinteraction)
-        db.session.commit()
-        flash("Car added to your cart!", "success")
-    
+        # Check if the car is already in the cart
+        existing_interaction = UserInteraction.query.filter_by(
+            buyer_email=user_email, car_id=car_id
+        ).first()
+
+        if existing_interaction:
+            if existing_interaction.in_cart:   # checks if cars is already in cart
+                flash("Car is already in your cart!", "info")
+            else:   # car is already in whitelist , so just change in_cart = true
+                existing_interaction.in_cart = True
+                usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=10) # also add interaction weight
+                db.session.add(usercarinteraction)
+                db.session.commit()
+                flash("Car added to your cart!", "success")
+        else:
+            usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=10)
+            userinteraction = UserInteraction(buyer_email=user_email, car_id=car_id, in_cart=True)
+            db.session.add(userinteraction)
+            db.session.add(usercarinteraction)
+            db.session.commit()
+            flash("Car added to your cart!", "success")
+
     elif interaction_type == 'view':
         # Redirect to the car details page
         usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=1)
