@@ -18,10 +18,22 @@
                 </div>
                 <ul class="list-group">
                     <li class="list-group-item"><strong>Year:</strong> {{ car.year }}</li>
-                    <li class="list-group-item"><strong>Price:</strong> &#8377;{{ car.price }}</li>
+                    <li class="list-group-item"><strong>Price:</strong> &#8377;{{ "{:,}".format(car.price) }}</li>
                     <li class="list-group-item"><strong>Location:</strong> {{ car.location }}</li>
                     <li class="list-group-item"><strong>Fuel Type:</strong> {{ car.fuel_type }}</li>
                     <li class="list-group-item"><strong>Transmission:</strong> {{ car.transmission }}</li>
+                    <li class="list-group-item"><strong>Kilometers Driven:</strong> {{ "{:,}".format(car.kilometers_driven) }} km</li>
+                    <li class="list-group-item"><strong>Owner Type:</strong> 
+                        {% if car.owner_type == 1 %} First Owner 
+                        {% elif car.owner_type == 2 %} Second Owner 
+                        {% else %} Pre-owned 
+                        {% endif %}</li>
+                    <li class="list-group-item"><strong>Mileage:</strong> {{ car.mileage }} km/l</li>
+                    <li class="list-group-item"><strong>Engine:</strong> {{ car.engine }} cc</li>
+                    <li class="list-group-item"><strong>Power:</strong> {{ car.power }} bhp</li>
+                    <li class="list-group-item"><strong>Seats:</strong> {{ car.seats }} seats</li>
+                    <li class="list-group-item"><strong>Age of Car:</strong> {{ car.ageofcar }} years</li>
+                    <li class="list-group-item"><strong>Brand Class:</strong> {{ car.brand_class }}</li>
                 </ul>
                 <a href="{{ url_for('buyer_dashboard') }}" class="btn btn-primary mt-4">Back to Dashboard</a>
             </div>

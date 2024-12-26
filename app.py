@@ -44,6 +44,14 @@ class Car(db.Model):
     fuel_type = db.Column(db.String(50), nullable=False)
     transmission = db.Column(db.String(50), nullable=False) 
     seller_email = db.Column(db.String(150), nullable=False)
+    kilometers_driven = db.Column(db.Integer, nullable=True)
+    owner_type = db.Column(db.Integer, nullable=True)
+    mileage = db.Column(db.Float, nullable=True)
+    engine = db.Column(db.Integer, nullable=True)
+    power = db.Column(db.Float, nullable=True)
+    seats = db.Column(db.Integer, nullable=True)
+    ageofcar = db.Column(db.Integer, nullable=True)
+    brand_class = db.Column(db.String(50), nullable=True)
 
 # UserCarInteraction model representing the UserCarInterractions (inter) table
 class UserCarInteraction(db.Model):
@@ -304,7 +312,15 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)  # Fetch car details from the database
     return render_template('car_details.html', car=car)
 
-# Our recommendation Modual
+        # Recommendation moduls
+'''
+        1. user based
+Similar User based recommendation Modual
+how works : if two users (A,B) have simiarity in interaction table
+            like then have same whitelist and cart
+            then A will recommend cars that are in whitelist and cart in user B
+            And B will recommend cars that are in whitelist and cart in user A
+'''
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
     if 'email' not in session:
@@ -363,6 +379,73 @@ def recommendations():
     recommended_car_ids = recommend_cars_for_user(user_email)
 
     # Step 5: Fetch car details for the recommended car IDs using the Car model
+    if not recommended_car_ids:
+        flash("No recommendations available at this time.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    recommended_cars = Car.query.filter(Car.id.in_(recommended_car_ids)).all()
+
+    return render_template('recommendations.html', cars=recommended_cars)
+
+'''
+        2. item baesd
+Similar cars interacted by user based recommendation Modual
+how works : if two cars (A,B) have simiarity in interaction table
+            if many users interact (shortlisted  and liked) similarly with cars A and B, 
+            they are considered similar.
+            After identifying the cars the user has interacted with, 
+            the system recommends cars similar to those based on the interaction patterns of all users, 
+            not just the individual user.
+'''
+
+@app.route('/item_based_recommendations', methods=['GET'])
+def item_based_recommendations():
+    if 'email' not in session:
+        flash("Please log in to get recommendations.", "warning")
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+
+    # Step 1: Fetch user interaction data
+    interactions = UserCarInteraction.query.all()
+    interaction_list = [
+        {'user_email': inter.user_email, 'car_id': inter.car_id, 'weight': inter.weight}
+        for inter in interactions
+    ]
+    interaction_df = pd.DataFrame(interaction_list)
+
+    if interaction_df.empty:
+        flash("No interaction data available for recommendations.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    # Step 2: Create item-user matrix
+    item_user_matrix = interaction_df.pivot_table(index='car_id', columns='user_email', values='weight', fill_value=0)
+
+    # Step 3: Compute item-item similarity matrix
+    from sklearn.metrics.pairwise import cosine_similarity
+    item_similarity_matrix = cosine_similarity(item_user_matrix)
+    item_similarity_df = pd.DataFrame(item_similarity_matrix, index=item_user_matrix.index, columns=item_user_matrix.index)
+
+    # Step 4: Generate recommendations
+    def recommend_similar_cars(user_email, num_recommendations=5):
+        # Get cars the user has interacted with
+        user_interactions = interaction_df[interaction_df['user_email'] == user_email]['car_id'].tolist()
+
+        # Aggregate similarity scores for all cars
+        similar_cars_scores = pd.Series(dtype=float)
+        for car_id in user_interactions:
+            if car_id in item_similarity_df.index:
+                similar_cars_scores = similar_cars_scores.add(item_similarity_df[car_id], fill_value=0)
+
+        # Exclude cars already interacted with
+        similar_cars_scores = similar_cars_scores.drop(index=user_interactions, errors='ignore')
+
+        # Get top recommended cars
+        return similar_cars_scores.nlargest(num_recommendations).index.tolist()
+
+    recommended_car_ids = recommend_similar_cars(user_email)
+
+    # Step 5: Fetch car details
     if not recommended_car_ids:
         flash("No recommendations available at this time.", "info")
         return redirect(url_for('buyer_dashboard'))
