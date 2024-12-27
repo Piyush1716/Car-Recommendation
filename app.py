@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from flask_mail import Message, Mail
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -102,6 +104,10 @@ def login():
 # Buyers dashboard
 @app.route('/buyer_dashboard', methods=['GET', 'POST'])
 def buyer_dashboard():
+    if 'email' not in session:
+        # If no user is logged in, redirect to login page
+        return redirect(url_for('login'))
+
     # Query all cars and convert to Pandas DataFrame
     cars_query = Car.query.all()
     cars_list = [
@@ -150,11 +156,15 @@ def buyer_dashboard():
         cars=cars,
         locations=locations,
         fuel_types=fuel_types,
-        transmissions=transmissions
+        transmissions=transmissions,
+        email = session['email']
     )
 # To View all Cars
 @app.route('/cars', methods=['GET'])
 def cars():    
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
     # Query the cars table
     cars = Car.query.all()
     
@@ -164,6 +174,8 @@ def cars():
 # Contect seller via Email
 @app.route('/contact_seller', methods=['POST'])
 def contact_seller():
+    if 'email' not in session:
+        return redirect(url_for('login'))
 
     buyer_email = session['email']
     seller_email = request.form['seller_email']
@@ -446,6 +458,100 @@ def item_based_recommendations():
     recommended_car_ids = recommend_similar_cars(user_email)
 
     # Step 5: Fetch car details
+    if not recommended_car_ids:
+        flash("No recommendations available at this time.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    recommended_cars = Car.query.filter(Car.id.in_(recommended_car_ids)).all()
+
+    return render_template('recommendations.html', cars=recommended_cars)
+'''
+        3. content based recommendations
+1. fetch cars that user has interacted
+2. convert attributes into a formate that is suitable for calculations
+3. numerical -> standard scaler   categorical -> one hot encoder
+4. cosine similarity btw cars.
+5. For each car the user interacted with, aggregate similarity scores with other cars.
+    Exclude cars the user has already interacted with.
+    Recommend cars with the highest similarity scores.
+'''
+
+@app.route('/content_based_recommendations', methods=['GET'])
+def content_based_recommendations():
+    if 'email' not in session:
+        flash("Please log in to get recommendations.", "warning")
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+
+    # Step 1: Fetch user interaction data
+    user_interactions = UserCarInteraction.query.filter_by(user_email=user_email).all()
+    if not user_interactions:
+        flash("No interaction data available for recommendations.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    # Get IDs of cars the user has interacted with
+    interacted_car_ids = [interaction.car_id for interaction in user_interactions]
+
+    # Step 2: Fetch attributes of all cars and convert to a DataFrame
+    cars = Car.query.all()
+    car_data = [
+        {
+            'id': car.id,
+            'brand_class': car.brand_class,
+            'fuel_type': car.fuel_type,
+            'transmission': car.transmission,
+            'mileage': car.mileage,
+            'price': car.price,
+            'kilometers_driven': car.kilometers_driven,
+            'engine': car.engine,
+            'power': car.power,
+            'seats': car.seats,
+            'age_of_car': car.ageofcar
+        }
+        for car in cars
+    ]
+    car_df = pd.DataFrame(car_data)
+
+    # Step 3: Preprocess data
+
+    # Define categorical and numerical columns
+    categorical_cols = ['brand_class', 'fuel_type', 'transmission']
+    numerical_cols = ['mileage', 'price', 'kilometers_driven', 'engine', 'power', 'seats', 'age_of_car']
+
+    # One-hot encode categorical columns and scale numerical columns
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numerical_cols),
+            ('cat', OneHotEncoder(), categorical_cols)
+        ]
+    )
+
+    car_features = preprocessor.fit_transform(car_df[categorical_cols + numerical_cols])
+
+    # Step 4: Compute similarity matrix
+    similarity_matrix = cosine_similarity(car_features)
+
+    # Convert similarity matrix to a DataFrame for easier manipulation
+    similarity_df = pd.DataFrame(similarity_matrix, index=car_df['id'], columns=car_df['id'])
+
+    # Step 5: Generate recommendations based on user interactions
+    def recommend_similar_cars(interacted_car_ids, num_recommendations=5):
+        # Aggregate similarity scores for all interacted cars
+        similar_cars_scores = pd.Series(dtype=float)
+        for car_id in interacted_car_ids:
+            if car_id in similarity_df.index:
+                similar_cars_scores = similar_cars_scores.add(similarity_df[car_id], fill_value=0)
+
+        # Exclude cars the user has already interacted with
+        similar_cars_scores = similar_cars_scores.drop(index=interacted_car_ids, errors='ignore')
+
+        # Return top recommended car IDs
+        return similar_cars_scores.nlargest(num_recommendations).index.tolist()
+
+    recommended_car_ids = recommend_similar_cars(interacted_car_ids)
+
+    # Step 6: Fetch details of recommended cars
     if not recommended_car_ids:
         flash("No recommendations available at this time.", "info")
         return redirect(url_for('buyer_dashboard'))

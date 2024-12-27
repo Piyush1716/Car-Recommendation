@@ -12,7 +12,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h3>Welcome to the Buyer Dashboard</h3>
+                        <h3>Welcome <span style="color: red;">{{ email }}</span> to the Buyer Dashboard</h3>
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 <div class="mt-3">
@@ -33,7 +33,13 @@
 
                         <!-- Highlighted Recommendation Feature -->
                         <div class="text-center mb-4">
-                            <a href="/recommendations" class="btn btn-lg btn-primary">Get Personalized Recommendations</a>
+                            <a href="/recommendations" class="btn btn-lg btn-primary">Get User-Based Recommendations</a>
+                        </div>
+                        <div class="text-center mb-4">
+                            <a href="/item_based_recommendations" class="btn btn-lg btn-success">Get Item-Based Recommendations</a>
+                        </div>
+                        <div class="text-center mb-4">
+                            <a href="/content_based_recommendations" class="btn btn-lg btn-info">Get Content-Based Recommendations</a>
                         </div>
 
                         <!-- Filter Form -->
