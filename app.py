@@ -467,13 +467,18 @@ def item_based_recommendations():
     return render_template('recommendations.html', cars=recommended_cars)
 '''
         3. content based recommendations
-1. fetch cars that user has interacted
-2. convert attributes into a formate that is suitable for calculations
-3. numerical -> standard scaler   categorical -> one hot encoder
-4. cosine similarity btw cars.
-5. For each car the user interacted with, aggregate similarity scores with other cars.
-    Exclude cars the user has already interacted with.
-    Recommend cars with the highest similarity scores.
+        Content-Based Filtering recommends items similar to those the user 
+        has already interacted with. The similarity is determined based on the 
+        item's attributes (e.g., price, fuel type, mileage).
+        - Fuel Type, Transmission, Owner Type, and Brand Class (Categorical Attributes).
+        - Price, Mileage, Age of Car (Numerical Attributes).
+        1. fetch cars that user has interacted
+        2. convert attributes into a formate that is suitable for calculations
+        3. numerical -> standard scaler   categorical -> one hot encoder
+        4. cosine similarity btw cars.
+        5. For each car the user interacted with, aggregate similarity scores with other cars.
+            Exclude cars the user has already interacted with.
+            Recommend cars with the highest similarity scores.
 '''
 
 @app.route('/content_based_recommendations', methods=['GET'])
@@ -557,6 +562,61 @@ def content_based_recommendations():
         return redirect(url_for('buyer_dashboard'))
 
     recommended_cars = Car.query.filter(Car.id.in_(recommended_car_ids)).all()
+
+    return render_template('recommendations.html', cars=recommended_cars)
+
+from datetime import datetime
+''' 
+        4. Popularity based recommendations
+        Popularity-Based Recommendations suggest items that are most popular among all users
+
+        1. Rating average: Recommending items with the highest average ratings from users.
+        2. Recency-based popularity: Prioritizing items that are popular recently (e.g., within the last month).
+'''
+@app.route('/popularity_based_recommendations', methods=['GET'])
+def popularity_based_recommendations():
+    if 'email' not in session:
+        flash("Please log in to get recommendations.", "warning")
+        return redirect(url_for('login'))
+
+    # Step 1: Fetch user interaction data
+    interactions = UserCarInteraction.query.all()
+    interaction_list = [
+        {
+            'car_id': inter.car_id,
+            'weight': inter.weight,
+            'timestamp': inter.timestamp
+        }
+        for inter in interactions
+    ]
+    interaction_df = pd.DataFrame(interaction_list)
+
+    if interaction_df.empty:
+        flash("No interaction data available for recommendations.", "info")
+        return redirect(url_for('buyer_dashboard'))
+
+    # Step 2: Calculate weighted popularity with recency
+    # Calculate days since interaction
+    current_time = datetime.now()
+    interaction_df['days_since_interaction'] = (current_time - interaction_df['timestamp']).dt.days
+
+    # Apply recency weight: More recent interactions are more significant
+    interaction_df['recency_weight'] = 1 / (1 + interaction_df['days_since_interaction'])
+
+    # Calculate final weighted popularity score
+    interaction_df['weighted_score'] = interaction_df['weight'] * interaction_df['recency_weight']
+
+    # Aggregate scores by car_id
+    car_popularity = interaction_df.groupby('car_id')['weighted_score'].sum().reset_index(name='popularity_score')
+    car_popularity = car_popularity.sort_values(by='popularity_score', ascending=False)
+
+    # Step 3: Fetch details for the top cars
+    top_car_ids = car_popularity['car_id'].head(5).tolist()  # Get top 5 most popular cars
+    recommended_cars = Car.query.filter(Car.id.in_(top_car_ids)).order_by(
+        db.case(
+            *[(Car.id == car_id, idx) for idx, car_id in enumerate(top_car_ids)]
+        )
+    ).all()
 
     return render_template('recommendations.html', cars=recommended_cars)
 
