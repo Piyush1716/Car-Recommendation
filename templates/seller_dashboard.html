@@ -33,39 +33,106 @@
                         <p>Use the form below to add your car details.</p>
 
                         <!-- Add Car Form -->
-                        <form method="POST" action="/seller_dashboard">
-                            <div class="form-group">
-                                <label for="car_name">Car Name:</label>
-                                <input type="text" id="car_name" name="car_name" class="form-control" required>
+                        <form method="POST" action="/seller_dashboard" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="car_name">Car Name:</label>
+                                    <input type="text" id="car_name" name="car_name" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="year">Year:</label>
+                                    <input type="number" id="year" name="year" class="form-control" required>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="year">Year:</label>
-                                <input type="number" id="year" name="year" class="form-control" required>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="price">Price (₹):</label>
+                                    <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="location">Location:</label>
+                                    <input type="text" id="location" name="location" class="form-control" required>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="price">Price (₹):</label>
-                                <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="fuel_type">Fuel Type:</label>
+                                    <select id="fuel_type" name="fuel_type" class="form-control" required>
+                                        <option value="Petrol">Petrol</option>
+                                        <option value="Diesel">Diesel</option>
+                                        <option value="Electric">Electric</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="transmission">Transmission:</label>
+                                    <select id="transmission" name="transmission" class="form-control" required>
+                                        <option value="Manual">Manual</option>
+                                        <option value="Automatic">Automatic</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="location">Location:</label>
-                                <input type="text" id="location" name="location" class="form-control" required>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="kilometers_driven">Kilometers Driven:</label>
+                                    <input type="number" id="kilometers_driven" name="kilometers_driven" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="owner_type">Owner Type:</label>
+                                    <select id="owner_type" name="owner_type" class="form-control" required>
+                                        <option value="First">First</option>
+                                        <option value="Second">Second</option>
+                                        <option value="Third">Third</option>
+                                        <option value="Fourth">Fourth</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="fuel_type">Fuel Type:</label>
-                                <select id="fuel_type" name="fuel_type" class="form-control" required>
-                                    <option value="Petrol">Petrol</option>
-                                    <option value="Diesel">Diesel</option>
-                                    <option value="Electric">Electric</option>
-                                    <option value="Hybrid">Hybrid</option>
-                                </select>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="mileage">Mileage (km/l):</label>
+                                    <input type="number" id="mileage" name="mileage" class="form-control" step="0.01" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="engine">Engine (cc):</label>
+                                    <input type="number" id="engine" name="engine" class="form-control" required>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="transmission">Transmission:</label>
-                                <select id="transmission" name="transmission" class="form-control" required>
-                                    <option value="Manual">Manual</option>
-                                    <option value="Automatic">Automatic</option>
-                                </select>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="power">Power (bhp):</label>
+                                    <input type="number" id="power" name="power" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="seats">Seats:</label>
+                                    <input type="number" id="seats" name="seats" class="form-control" required>
+                                </div>
                             </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="age_of_car">How Old is Car (years):</label>
+                                    <input type="number" id="age_of_car" name="age_of_car" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="brand_class">Brand Class:</label>
+                                    <select id="brand_class" name="brand_class" class="form-control" required>
+                                        <option value="Luxury">Luxury</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="Economy">Economy</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="car_image">Upload Car Image:</label>
+                                <input type="file" id="car_image" name="car_image" class="form-control" accept="image/*" required>
+                            </div>
+
                             <button type="submit" class="btn btn-primary">Add Car</button>
                         </form>
 
@@ -80,9 +147,9 @@
                                         <th>Car Name</th>
                                         <th>Year</th>
                                         <th>Price</th>
-                                        <th>Location</th>
                                         <th>Fuel Type</th>
                                         <th>Transmission</th>
+                                        <th>Image</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -92,9 +159,9 @@
                                             <td>{{ car.model }}</td>
                                             <td>{{ car.year }}</td>
                                             <td>&#8377;{{ car.price }}</td>
-                                            <td>{{ car.location }}</td>
                                             <td>{{ car.fuel_type }}</td>
                                             <td>{{ car.transmission }}</td>
+                                            <td><img src="{{ car.image_url }}" alt="Car Image" width="100"></td>
                                             <td>
                                                 <!-- Edit and Delete buttons -->
                                                 <a href="/edit_car/{{ car.id }}" class="btn btn-warning btn-sm">Edit</a>

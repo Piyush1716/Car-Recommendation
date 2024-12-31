@@ -15,7 +15,6 @@
                         <h3>Edit Car Details</h3>
                     </div>
                     <div class="card-body">
-                        <!-- Display flash messages -->
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 <div class="alert alert-{{ messages[0][0] }} mt-3" role="alert">
@@ -24,43 +23,130 @@
                             {% endif %}
                         {% endwith %}
 
-                        <form method="POST" action="{{ url_for('edit_car', car_id=car.id) }}">
-                            <div class="form-group">
-                                <label for="car_name">Car Name:</label>
-                                <input type="text" id="car_name" name="car_name" class="form-control" value="{{ car.model }}" required>
+                        <form method="POST" action="{{ url_for('edit_car', car_id=car.id) }}" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="car_name">Car Name:</label>
+                                        <input type="text" id="car_name" name="car_name" class="form-control" value="{{ car.model }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="year">Year:</label>
+                                        <input type="number" id="year" name="year" class="form-control" value="{{ car.year }}" required>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="year">Year:</label>
-                                <input type="number" id="year" name="year" class="form-control" value="{{ car.year }}" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="price">Price (₹):</label>
+                                        <input type="number" id="price" name="price" class="form-control" value="{{ car.price }}" step="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="location">Location:</label>
+                                        <input type="text" id="location" name="location" class="form-control" value="{{ car.location }}" required>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="price">Price (₹):</label>
-                                <input type="number" id="price" name="price" class="form-control" value="{{ car.price }}" step="0.01" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fuel_type">Fuel Type:</label>
+                                        <select id="fuel_type" name="fuel_type" class="form-control" required>
+                                            <option value="Petrol" {% if car.fuel_type == 'Petrol' %} selected {% endif %}>Petrol</option>
+                                            <option value="Diesel" {% if car.fuel_type == 'Diesel' %} selected {% endif %}>Diesel</option>
+                                            <option value="Electric" {% if car.fuel_type == 'Electric' %} selected {% endif %}>Electric</option>
+                                            <option value="Hybrid" {% if car.fuel_type == 'Hybrid' %} selected {% endif %}>Hybrid</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="transmission">Transmission:</label>
+                                        <select id="transmission" name="transmission" class="form-control" required>
+                                            <option value="Manual" {% if car.transmission == 'Manual' %} selected {% endif %}>Manual</option>
+                                            <option value="Automatic" {% if car.transmission == 'Automatic' %} selected {% endif %}>Automatic</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="location">Location:</label>
-                                <input type="text" id="location" name="location" class="form-control" value="{{ car.location }}" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="kilometers_driven">Kilometers Driven:</label>
+                                        <input type="number" id="kilometers_driven" name="kilometers_driven" class="form-control" value="{{ car.kilometers_driven }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="owner_type">Owner Type:</label>
+                                        <select id="owner_type" name="owner_type" class="form-control" required>
+                                            <option value="1" {% if car.owner_type == 1 %} selected {% endif %}>First</option>
+                                            <option value="2" {% if car.owner_type == 2 %} selected {% endif %}>Second</option>
+                                            <option value="3" {% if car.owner_type == 3 %} selected {% endif %}>Third</option>
+                                            <option value="4" {% if car.owner_type == 4 %} selected {% endif %}>Fourth</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="fuel_type">Fuel Type:</label>
-                                <select id="fuel_type" name="fuel_type" class="form-control" required>
-                                    <option value="Petrol" {% if car.fuel_type == 'Petrol' %} selected {% endif %}>Petrol</option>
-                                    <option value="Diesel" {% if car.fuel_type == 'Diesel' %} selected {% endif %}>Diesel</option>
-                                    <option value="Electric" {% if car.fuel_type == 'Electric' %} selected {% endif %}>Electric</option>
-                                    <option value="Hybrid" {% if car.fuel_type == 'Hybrid' %} selected {% endif %}>Hybrid</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="mileage">Mileage (km/l):</label>
+                                        <input type="text" id="mileage" name="mileage" class="form-control" value="{{ car.mileage }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="engine">Engine (cc):</label>
+                                        <input type="text" id="engine" name="engine" class="form-control" value="{{ car.engine }}" required>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="transmission">Transmission:</label>
-                                <select id="transmission" name="transmission" class="form-control" required>
-                                    <option value="Manual" {% if car.transmission == 'Manual' %} selected {% endif %}>Manual</option>
-                                    <option value="Automatic" {% if car.transmission == 'Automatic' %} selected {% endif %}>Automatic</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="power">Power (bhp):</label>
+                                        <input type="text" id="power" name="power" class="form-control" value="{{ car.power }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="seats">Seats:</label>
+                                        <input type="number" id="seats" name="seats" class="form-control" value="{{ car.seats }}" required>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">Update Car</button>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="age_of_car">Age of Car (years):</label>
+                                        <input type="number" id="age_of_car" name="age_of_car" class="form-control" value="{{ car.ageofcar }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brand_class">Brand Class:</label>
+                                        <input type="text" id="brand_class" name="brand_class" class="form-control" value="{{ car.brand_class }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group text-center">
+                                {% if car.image_url %}
+                                    <img src="{{ '/' + car.image_url }}" alt="Car Image" class="img-thumbnail mb-3" style="max-width: 200px;">
+                                {% endif %}
+                                <label for="car_image">Update Car Image:</label>
+                                <input type="file" id="car_image" name="car_image" class="form-control-file">
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Update Car</button>
+                                <a href="{{ url_for('seller_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                            </div>
                         </form>
-
-                        <a href="{{ url_for('seller_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
                     </div>
                 </div>
             </div>

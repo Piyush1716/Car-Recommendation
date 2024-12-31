@@ -5,6 +5,8 @@ from flask_mail import Message, Mail
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -26,6 +28,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/cardb' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# Define the folder where images will be stored
+UPLOAD_FOLDER = 'static/uploads/cars/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # User model representing the users table
 class User(db.Model):
     __tablename__ = 'users'
@@ -46,14 +52,16 @@ class Car(db.Model):
     fuel_type = db.Column(db.String(50), nullable=False)
     transmission = db.Column(db.String(50), nullable=False) 
     seller_email = db.Column(db.String(150), nullable=False)
-    kilometers_driven = db.Column(db.Integer, nullable=True)
-    owner_type = db.Column(db.Integer, nullable=True)
-    mileage = db.Column(db.Float, nullable=True)
-    engine = db.Column(db.Integer, nullable=True)
-    power = db.Column(db.Float, nullable=True)
-    seats = db.Column(db.Integer, nullable=True)
-    ageofcar = db.Column(db.Integer, nullable=True)
-    brand_class = db.Column(db.String(50), nullable=True)
+    kilometers_driven = db.Column(db.Integer, nullable=False)
+    owner_type = db.Column(db.Integer, nullable=False)
+    mileage = db.Column(db.Float, nullable=False)
+    engine = db.Column(db.Integer, nullable=False)
+    power = db.Column(db.Float, nullable=False)
+    seats = db.Column(db.Integer, nullable=False)
+    ageofcar = db.Column(db.Integer, nullable=False)
+    brand_class = db.Column(db.String(50), nullable=False)
+    image_url = db.Column(db.String(200), nullable=True)  # Image URL path
+
 
 # UserCarInteraction model representing the UserCarInterractions (inter) table
 class UserCarInteraction(db.Model):
@@ -620,53 +628,92 @@ def popularity_based_recommendations():
 
     return render_template('recommendations.html', cars=recommended_cars)
 
+# Allowed extensions for image files
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
 
-# Placeholder route for seller dashboard
+# Function to check allowed image extensions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/seller_dashboard', methods=['GET', 'POST'])
 def seller_dashboard():
-    message = None  # Default message
-
     if 'email' not in session:
         # If no user is logged in, redirect to login page
         return redirect(url_for('login'))
-
+    
     seller_email = session['email']  # Get the logged-in user's email
 
     if request.method == 'POST':
-        # Get form data for adding a new car
-        model = request.form.get('car_name')
-        year = request.form.get('year')
-        price = request.form.get('price')
-        location = request.form.get('location')
-        fuel_type = request.form.get('fuel_type')
-        transmission = request.form.get('transmission')
+        # Get the form data
+        car_name = request.form['car_name']
+        year = request.form['year']
+        price = request.form['price']
+        location = request.form['location']
+        fuel_type = request.form['fuel_type']
+        transmission = request.form['transmission']
+        kilometers_driven = request.form['kilometers_driven']
+        owner_type = {'first': 1, 'second': 2, 'third': 3, 'fourth': 4}.get(request.form['owner_type'].lower(), None)
+        mileage = request.form['mileage']
+        engine = request.form['engine']
+        power = request.form['power']
+        seats = request.form['seats']
+        age_of_car = request.form['age_of_car']
+        brand_class = request.form['brand_class']
+        
+        # Handle image upload
+        car_image = request.files['car_image']
+        image_path = 'None'
 
-        # Validate input
-        if not all([model, year, price, location, fuel_type, transmission]):
-            message = "All fields are required to add a car."
-        else:
-            try:
-                # Add the car to the database
-                new_car = Car(
-                    model=model,
-                    year=int(year),
-                    price=float(price),
-                    location=location,
-                    fuel_type=fuel_type,
-                    transmission=transmission,
-                    seller_email=seller_email  # Assign the logged-in seller's email
-                )
-                db.session.add(new_car)
-                db.session.commit()
-                message = "Car added successfully!"
-            except Exception as e:
-                # Handle database errors
-                message = f"An error occurred: {str(e)}"
+        try:
+            # Create a new Car object with the form data (without the image_url)
+            new_car = Car(
+                model=car_name,
+                year=year,
+                price=price,
+                location=location,
+                fuel_type=fuel_type,
+                transmission=transmission,
+                seller_email=seller_email,  # Assign the logged-in seller's email
+                kilometers_driven=kilometers_driven,
+                owner_type=owner_type,
+                mileage=mileage,
+                engine=engine,
+                power=power,
+                seats=seats,
+                ageofcar=age_of_car,
+                brand_class=brand_class,
+                image_url=image_path  # Placeholder for the image URL
+            )
 
-    # Fetch cars listed by the logged-in seller
-    seller_cars = Car.query.filter_by(seller_email=seller_email).all()
+            # Add the new car to the database
+            db.session.add(new_car)
+            db.session.commit()  # Commit to generate the car_id
 
-    return render_template('seller_dashboard.html', message=message, cars=seller_cars)
+            # After committing, we can get the car_id
+            car_id = new_car.id
+
+            if car_image and allowed_file(car_image.filename):
+                # Generate the unique filename for the image
+                new_filename = f"{car_name.replace(' ', '_')}_{car_id}{os.path.splitext(car_image.filename)[1]}"
+                new_image_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+
+                # Save the image to the specified folder
+                car_image.save(new_image_path)
+
+                # Update the car record with the new image filename
+                new_car.image_url = new_image_path
+                db.session.commit()  # Commit the image URL update
+            flash("Car added successfully! ", "success")
+        except Exception as e:
+            # for developer to understand which error occurd !!
+            # flash(f'An error occurred: {str(e)} ',"warning")
+            flash(f'An error occurred!! ',"warning")
+        return redirect(url_for('seller_dashboard'))
+
+    # Fetch the list of cars for display
+    cars = Car.query.filter_by(seller_email=seller_email).all()
+    return render_template('seller_dashboard.html', cars=cars)
+
 
 @app.route('/delete_car/<int:car_id>', methods=['GET'])
 def delete_car(car_id):
@@ -695,7 +742,6 @@ def delete_car(car_id):
 
 @app.route('/edit_car/<int:car_id>', methods=['GET', 'POST'])
 def edit_car(car_id):
-
     # If no user is logged in, redirect to login page
     if 'email' not in session:
         return redirect(url_for('login'))
@@ -710,26 +756,65 @@ def edit_car(car_id):
     if car.seller_email != current_seller_email:
         abort(403)  # If not, prevent editing and show 403 Forbidden error
     
-    # Handle form submission (POST request)
     if request.method == 'POST':
-        car.model = request.form['car_name']
-        car.year = request.form['year']
-        car.price = request.form['price']
-        car.location = request.form['location']
-        car.fuel_type = request.form['fuel_type']
-        car.transmission = request.form['transmission']
+        try:
+            # Handle form submission (POST request)
+            old_model_name = car.model  # Store old model name
+            car.model = request.form['car_name']
+            car.year = request.form['year']
+            car.price = request.form['price']
+            car.location = request.form['location']
+            car.fuel_type = request.form['fuel_type']
+            car.transmission = request.form['transmission']
+            car.kilometers_driven = request.form['kilometers_driven']
+            car.owner_type = request.form['owner_type']
+            car.mileage = request.form['mileage']
+            car.engine = request.form['engine']
+            car.power = request.form['power']
+            car.seats = request.form['seats']
+            car.ageofcar = request.form['age_of_car']
+            car.brand_class = request.form['brand_class']
 
-        # Commit the changes to the database
-        db.session.commit()
-        
-        # Flash success message
-        flash("Car details updated successfully!", "success")
-        
+            # Handle image upload
+            car_image = request.files['car_image']
+            
+            if car_image and car_image.filename != '':
+                # Delete old image if it exists
+                if car.image_url:
+                    old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(car.image_url))
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+
+                # Generate a new filename using car name and car ID
+                if allowed_file(car_image.filename):
+                    new_filename = f"{car.model.replace(' ', '_')}_{car.id}{os.path.splitext(car_image.filename)[1]}"
+                    new_image_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                    car_image.save(new_image_path)
+                    car.image_url = new_image_path
+            else:
+                # If image not uploaded but model name changed, rename the existing image
+                if old_model_name != car.model and car.image_url:
+                    old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(car.image_url))
+                    new_filename = f"{car.model.replace(' ', '_')}_{car.id}{os.path.splitext(old_image_path)[1]}"
+                    new_image_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                    os.rename(old_image_path, new_image_path)
+                    car.image_url = new_image_path
+
+            # Commit the changes to the database
+            db.session.commit()
+
+            # Flash success message
+            flash(f"Car details updated successfully!" , "success")
+        except Exception as e:
+            # For developer to understand which error occurred
+            flash(f"An error occurred: {str(e)}", "warning")
+
         # Redirect to the seller dashboard after updating
         return redirect(url_for('seller_dashboard'))
 
     # Handle GET request (render the edit form)
     return render_template('edit_car.html', car=car)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
