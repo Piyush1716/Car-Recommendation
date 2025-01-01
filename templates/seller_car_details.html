@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Details - {{ car.model }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .car-image {
+            max-height: 400px;
+            object-fit: cover;
+        }
+        .specs-icon {
+            width: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('buyer_dashboard') }}">Car Recommendation System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('buyer_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('view_whitelist') }}"><i class="fas fa-heart"></i> Favorites</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('view_cart') }}"><i class="fas fa-shopping-cart"></i> Cart</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ car.model }} <span class="badge bg-primary">{{ car.year }}</span></h2>
+                        <img src="{{'/'+car.image_url}}" alt="{{ car.model }}" class="img-fluid rounded car-image mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="text-primary mb-0">₹{{ "{:,}".format(car.price) }}</h3>
+                            <span class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ car.location }}</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-gas-pump specs-icon text-primary"></i> Fuel Type</span>
+                                        <span class="fw-bold">{{ car.fuel_type }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-cog specs-icon text-primary"></i> Transmission</span>
+                                        <span class="fw-bold">{{ car.transmission }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-road specs-icon text-primary"></i> Kilometers Driven</span>
+                                        <span class="fw-bold">{{ "{:,}".format(car.kilometers_driven) }} km</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-user specs-icon text-primary"></i> Owner Type</span>
+                                        <span class="fw-bold">
+                                            {% if car.owner_type == 1 %} First Owner 
+                                            {% elif car.owner_type == 2 %} Second Owner 
+                                            {% else %} Pre-owned 
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-tachometer-alt specs-icon text-primary"></i> Mileage</span>
+                                        <span class="fw-bold">{{ car.mileage }} km/l</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-cogs specs-icon text-primary"></i> Engine</span>
+                                        <span class="fw-bold">{{ car.engine }} cc</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-bolt specs-icon text-primary"></i> Power</span>
+                                        <span class="fw-bold">{{ car.power }} bhp</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-users specs-icon text-primary"></i> Seats</span>
+                                        <span class="fw-bold">{{ car.seats }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h4>Additional Information</h4>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-calendar-alt specs-icon text-primary"></i> Age of Car</span>
+                                    <span class="fw-bold">{{ car.ageofcar }} years</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-tag specs-icon text-primary"></i> Brand Class</span>
+                                    <span class="fw-bold">{{ car.brand_class }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title">Actions</h4>
+                        <form method="POST" action="{{ url_for('edit_car', car_id=car.id) }}" class="mb-2">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-edit"></i> Edit Listing
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('delete_car', car_id=car.id) }}" class="mb-2">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-trash"></i> Delete Listing
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('mark_as_sold', car_id=car.id) }}">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check-circle"></i> Mark as Sold
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card shadow-sm mt-4">
+                    <div class="card-body d-flex justify-content-between">
+                        <a href="{% if prev_car %}{{ url_for('seller_car_details', car_id=prev_car.id) }}{% else %}#{% endif %}" 
+                        class="btn btn-outline-primary {% if not prev_car %}disabled{% endif %}">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+
+                        <a href="{% if next_car %}{{ url_for('seller_car_details', car_id=next_car.id) }}{% else %}#{% endif %}" 
+                        class="btn btn-outline-primary {% if not next_car %}disabled{% endif %}">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

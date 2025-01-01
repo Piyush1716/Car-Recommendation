@@ -292,7 +292,7 @@ def interaction():
         usercarinteraction = UserCarInteraction(user_email=user_email, car_id=car_id, weight=1)
         db.session.add(usercarinteraction)
         db.session.commit()
-        return redirect(url_for('car_details', car_id=car_id))
+        return redirect(url_for('buyer_car_details', car_id=car_id))
 
     return redirect(url_for('buyer_dashboard'))
 
@@ -300,11 +300,11 @@ def interaction():
 @app.route('/view_whitelist', methods=['GET'])
 def view_whitelist():
     # Get logged-in user's email
-    buyer_email = session['email']
-    if not buyer_email:
+    if 'email' not in session:
         flash("Please log in to view your whitelist.", "warning")
         return redirect(url_for('login'))
 
+    buyer_email = session['email']
     # Fetch cars in the whitelist for the logged-in user
     whitelist = db.session.query(Car).join(UserInteraction, Car.id == UserInteraction.car_id)\
         .filter(UserInteraction.buyer_email == buyer_email, UserInteraction.in_whitelist == True).all()
@@ -315,11 +315,11 @@ def view_whitelist():
 @app.route('/view_cart', methods=['GET'])
 def view_cart():
     # Get logged-in user's email
-    buyer_email = session['email']
-    if not buyer_email:
+    if 'email' not in session:
         flash("Please log in to view your cart.", "warning")
         return redirect(url_for('login'))
 
+    buyer_email = session['email']
     # Fetch cars in the cart for the logged-in user
     cart = db.session.query(Car).join(UserInteraction, Car.id == UserInteraction.car_id)\
         .filter(UserInteraction.buyer_email == buyer_email, UserInteraction.in_cart == True).all()
@@ -327,10 +327,13 @@ def view_cart():
     return render_template('cart.html', cart=cart)
 
 
-@app.route('/car_details/<int:car_id>', methods=['GET'])
-def car_details(car_id):
-    car = Car.query.get_or_404(car_id)  # Fetch car details from the database
-    return render_template('car_details.html', car=car)
+@app.route('/buyer_car_details/<int:car_id>', methods=['GET'])
+def buyer_car_details(car_id):
+    if 'email' in session :
+        car = Car.query.get_or_404(car_id)  # Fetch car details from the database
+        return render_template('buyer_car_details.html', car=car)
+    
+    return redirect(url_for('login'))
 
         # Recommendation moduls
 '''
@@ -815,6 +818,46 @@ def edit_car(car_id):
     # Handle GET request (render the edit form)
     return render_template('edit_car.html', car=car)
 
+@app.route('/seller_car_details/<int:car_id>', methods=['GET'])
+def seller_car_details(car_id):
+    if 'email' not in session:
+        return redirect(url_for('login'))
+    
+    seller_email = session['email']
+
+    # Get the current car details
+    current_car = Car.query.filter_by(id=car_id, seller_email=seller_email).first()
+    if not current_car:
+        flash("Car not found or you don't have permission to view this car.", "danger")
+        return redirect(url_for('seller_dashboard'))
+
+    # Get the previous and next cars for the seller
+    previous_car = (
+        Car.query.filter(Car.seller_email == seller_email, Car.id < car_id)
+        .order_by(Car.id.desc())
+        .first()
+    )
+    next_car = (
+        Car.query.filter(Car.seller_email == seller_email, Car.id > car_id)
+        .order_by(Car.id.asc())
+        .first()
+    )
+
+    # Pass the data to the template
+    return render_template(
+        'seller_car_details.html',
+        car=current_car,
+        prev_car=previous_car,
+        next_car=next_car
+    )
+
+@app.route('/mark_as_sold/<int:car_id>', methods=['GET'])
+def mark_as_sold(car_id):
+    if 'email' in session:
+        car = Car.query.get_or_404(car_id)  # Fetch car details from the database
+        return render_template('seller_car_details.html', car=car)
+    
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
