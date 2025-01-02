@@ -715,7 +715,21 @@ def seller_dashboard():
 
     # Fetch the list of cars for display
     cars = Car.query.filter_by(seller_email=seller_email).all()
-    return render_template('seller_dashboard.html', cars=cars)
+
+    # Fetch total views and interested buyers
+    car_ids = [car.id for car in cars]
+    car_views = {
+        car_id: db.session.query(db.func.count(UserCarInteraction.id)).filter(UserCarInteraction.car_id == car_id, UserCarInteraction.weight == 1).scalar() or 0
+        for car_id in car_ids
+    }
+    # Calculate total views across all cars
+    total_views = sum(car_views.values())
+    total_views = db.session.query(db.func.count(UserCarInteraction.weight)).filter(UserCarInteraction.car_id.in_(car_ids), UserCarInteraction.weight == 1).scalar() or 0
+    total_likes = db.session.query(db.func.count(UserCarInteraction.weight)).filter(UserCarInteraction.car_id.in_(car_ids), UserCarInteraction.weight == 5).scalar() or 0
+    total_shortlisted = db.session.query(db.func.count(UserCarInteraction.weight)).filter(UserCarInteraction.car_id.in_(car_ids), UserCarInteraction.weight == 10).scalar() or 0
+    interested_buyers = total_likes + total_shortlisted
+
+    return render_template('seller_dashboard.html', cars=cars, total_views=total_views, interested_buyers=interested_buyers,car_views=car_views)
 
 
 @app.route('/delete_car/<int:car_id>', methods=['GET'])

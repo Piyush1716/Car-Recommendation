@@ -206,12 +206,12 @@
                                 {% for car in cars %}
                                     <tr>
                                         <td><img src="{{ car.image_url }}" alt="Car Image" class="car-image rounded"></td>
-                                        <td>{{ car.model }}</td>
+                                        <td>{{ car.model}} , {{car.id}}</td>
                                         <td>{{ car.year }}</td>
                                         <td>₹{{ "{:,}".format(car.price) }}</td>
                                         <td>{{ car.fuel_type }}</td>
                                         <td>{{ car.transmission }}</td>
-                                        <td>{{ car.views }}</td>
+                                        <td>{{ car_views[car.id] }}</td>
                                         <td>
                                             <a href="/edit_car/{{ car.id }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
                                             <a href="/seller_car_details/{{ car.id }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> View</a>
