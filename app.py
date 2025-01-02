@@ -6,6 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from werkzeug.utils import secure_filename
+from datetime import datetime
 import os
 
 app = Flask(__name__)
@@ -62,7 +63,6 @@ class Car(db.Model):
     brand_class = db.Column(db.String(50), nullable=False)
     image_url = db.Column(db.String(200), nullable=True)  # Image URL path
 
-
 # UserCarInteraction model representing the UserCarInterractions (inter) table
 class UserCarInteraction(db.Model):
     __tablename__ = 'inter'
@@ -97,6 +97,7 @@ def login():
         if user and user.password == password:
             session['email'] = email
             session['role'] = user.role
+            session['name'] = user.username
 
             # Redirect based on role
             if role == 'buyer':
@@ -158,14 +159,14 @@ def buyer_dashboard():
     top10 = filtered_cars.head(10)
     # Convert the filtered DataFrame back to a list of dictionaries for the template
     cars = top10.to_dict(orient='records')
-
     return render_template(
         'buyer_dashboard.html',
         cars=cars,
         locations=locations,
         fuel_types=fuel_types,
         transmissions=transmissions,
-        email = session['email']
+        email = session['email'],
+        name = session['name']
     )
 # To View all Cars
 @app.route('/cars', methods=['GET'])
@@ -323,9 +324,30 @@ def view_cart():
     # Fetch cars in the cart for the logged-in user
     cart = db.session.query(Car).join(UserInteraction, Car.id == UserInteraction.car_id)\
         .filter(UserInteraction.buyer_email == buyer_email, UserInteraction.in_cart == True).all()
+    total_price = 0
+    for car in cart:
+        total_price+=car.price
+    return render_template('cart.html', cart=cart,total_price = total_price)
 
-    return render_template('cart.html', cart=cart)
+# Route to display cart
+@app.route('/remove_from_cart/<int:car_id>', methods=['GET'])
+def remove_from_cart(car_id):
+    # Get logged-in user's email
+    if 'email' not in session:
+        flash("Please log in to view your cart.", "warning")
+        return redirect(url_for('login'))
 
+    buyer_email = session['email']
+    car = UserCarInteraction.query.filter_by(user_email=buyer_email,car_id=car_id,weight=5).first()
+    db.session.delete(car)
+
+    car = UserInteraction.query.filter_by(buyer_email=buyer_email,car_id=car_id).first()
+    if car.in_whitelist:
+        car.in_cart = 0
+    else:
+        db.session.delete(car)
+    db.session.commit()
+    return render_template('removed.html',car=car)
 
 @app.route('/buyer_car_details/<int:car_id>', methods=['GET'])
 def buyer_car_details(car_id):
@@ -576,7 +598,6 @@ def content_based_recommendations():
 
     return render_template('recommendations.html', cars=recommended_cars)
 
-from datetime import datetime
 ''' 
         4. Popularity based recommendations
         Popularity-Based Recommendations suggest items that are most popular among all users

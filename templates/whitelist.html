@@ -3,24 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whitelist</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>My Whitelist - Car Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .car-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+    </style>
 </head>
-<body>
-    <div class="container mt-5">
-        <h3>My Whitelist</h3>
-        <ul class="list-group">
-            {% if whitelist %}
-                {% for car in whitelist %}
-                    <li class="list-group-item">
-                        <strong>{{ car.model }}</strong> - {{ car.year }} - &#8377;{{ car.price }} - {{ car.location }}
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/buyer_dashboard">Car Recommendation System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/buyer_dashboard"><i class="fas fa-home"></i> Dashboard</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/view_whitelist"><i class="fas fa-heart"></i> Whitelist</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/view_cart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">My Whitelist</h1>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search cars...">
+            </div>
+            <div class="col-md-6">
+                <select id="sortSelect" class="form-select">
+                    <option value="">Sort by...</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="year-desc">Year: Newest First</option>
+                    <option value="year-asc">Year: Oldest First</option>
+                </select>
+            </div>
+        </div>
+
+        {% if whitelist %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="carList">
+                {% for car in whitelist %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <img src="{{ car.image_url }}" class="card-img-top car-image" alt="{{ car.model }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ car.model }} <span class="badge bg-primary">{{ car.year }}</span></h5>
+                                <p class="card-text">
+                                    <strong>Price:</strong> ₹{{ "{:,}".format(car.price) }}<br>
+                                    <strong>Location:</strong> {{ car.location }}<br>
+                                    <strong>Fuel Type:</strong> {{ car.fuel_type }}<br>
+                                    <strong>Transmission:</strong> {{ car.transmission }}
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <a href="/buyer_car_details/{{ car.id }}" class="btn btn-primary btn-sm">View Details</a>
+                                <button class="btn btn-danger btn-sm float-end" data-bs-toggle="modal" data-bs-target="#removeModal{{ car.id }}">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Remove Confirmation Modal -->
+                    <div class="modal fade" id="removeModal{{ car.id }}" tabindex="-1" aria-labelledby="removeModalLabel{{ car.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="removeModalLabel{{ car.id }}">Confirm Removal</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to remove {{ car.model }} from your whitelist?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <a href="/remove_from_whitelist/{{ car.id }}" class="btn btn-danger">Remove</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endfor %}
-            {% else %}
-                <li class="list-group-item">Your whitelist is empty.</li>
-            {% endif %}
-        </ul>
-        <a href="/buyer_dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Your whitelist is empty. Start adding cars you like!
+            </div>
+        {% endif %}
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            let filter = this.value.toLowerCase();
+            let cards = document.querySelectorAll('#carList .col');
+            cards.forEach(card => {
+                let text = card.textContent.toLowerCase();
+                card.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+
+        // Sorting functionality
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            let cards = Array.from(document.querySelectorAll('#carList .col'));
+            let sortBy = this.value;
+            cards.sort((a, b) => {
+                let aValue, bValue;
+                switch(sortBy) {
+                    case 'price-asc':
+                    case 'price-desc':
+                        aValue = parseFloat(a.querySelector('.card-text').textContent.match(/₹([\d,]+)/)[1].replace(/,/g, ''));
+                        bValue = parseFloat(b.querySelector('.card-text').textContent.match(/₹([\d,]+)/)[1].replace(/,/g, ''));
+                        return sortBy === 'price-asc' ? aValue - bValue : bValue - aValue;
+                    case 'year-asc':
+                    case 'year-desc':
+                        aValue = parseInt(a.querySelector('.badge').textContent);
+                        bValue = parseInt(b.querySelector('.badge').textContent);
+                        return sortBy === 'year-asc' ? aValue - bValue : bValue - aValue;
+                    default:
+                        return 0;
+                }
+            });
+            let carList = document.getElementById('carList');
+            cards.forEach(card => carList.appendChild(card));
+        });
+    </script>
 </body>
 </html>

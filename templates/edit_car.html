@@ -131,7 +131,12 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="brand_class">Brand Class:</label>
-                                        <input type="text" id="brand_class" name="brand_class" class="form-control" value="{{ car.brand_class }}" required>
+                                        <select id="brand_class" name="brand_class" class="form-control" required>
+                                            <option value="Luxury" {% if car.brand_class == 'Luxury' %}selected{% endif %}>Luxury</option>
+                                            <option value="Premium" {% if car.brand_class == 'Premium' %}selected{% endif %}>Premium</option>
+                                            <option value="Economy" {% if car.brand_class == 'Economy' %}selected{% endif %}>Economy</option>
+                                            <option value="Performance" {% if car.brand_class == 'Performance' %}selected{% endif %}>Performance</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
