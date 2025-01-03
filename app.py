@@ -430,7 +430,6 @@ def recommendations():
         }
         for inter in interactions
     ]
-
     # Convert interaction data into a pandas DataFrame
     interaction_df = pd.DataFrame(interaction_list)
 
@@ -440,7 +439,6 @@ def recommendations():
 
     # Step 2: Create a user-item interaction matrix
     interaction_matrix = interaction_df.pivot_table(index='user_email', columns='car_id', values='weight', fill_value=0)
-
     # Step 3: Compute similarity matrix
     similarity_matrix = cosine_similarity(interaction_matrix)
     user_similarity = pd.DataFrame(similarity_matrix, index=interaction_matrix.index, columns=interaction_matrix.index)

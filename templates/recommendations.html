@@ -3,34 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Recommendations</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Car Recommendations - Car Recommendation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+        .list-view .card {
+            flex-direction: row;
+        }
+        .list-view .card-img-top {
+            width: 200px;
+            height: 100%;
+        }
+        .list-view .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .list-view .list-group {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .list-view .list-group-item {
+            width: 50%;
+            border: none;
+        }
+    </style>
 </head>
-<body>
-    <div class="container mt-5">
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/buyer_dashboard">Car Recommendation System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/buyer_dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/view_whitelist"><i class="fas fa-heart"></i> Favorites</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/view_cart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
         <h1 class="mb-4">Recommended Cars for You</h1>
+        
         {% if cars and cars|length > 0 %}
-            <div class="row">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <select id="sortSelect" class="form-select">
+                        <option value="" disabled selected>Sort by...</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="year_desc">Year: Newest First</option>
+                        <option value="year_asc">Year: Oldest First</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="filterSelect" class="form-select">
+                        <option value="" disabled selected>Filter by Fuel Type...</option>
+                        <option value="Petrol">Petrol</option>
+                        <option value="Diesel">Diesel</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Hybrid">Hybrid</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="btn-group" role="group" aria-label="View toggle">
+                        <button type="button" class="btn btn-outline-primary active" id="gridView">
+                            <i class="fas fa-th-large"></i> Grid
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="listView">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="carList" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 {% for car in cars %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <img src="{{ car.image_url if car.image_url else '/static/car.png' }}" class="card-img-top" alt="Car Image">
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <img src="{{ car.image_url if car.image_url else '/static/car.png' }}" class="card-img-top" alt="{{ car.model }}">
                             <div class="card-body">
                                 <h5 class="card-title">{{ car.model }}</h5>
                                 <ul class="list-group list-group-flush">
-                                    <li class="list-group-item"><strong>ID:</strong> {{ car.id }}</li>
                                     <li class="list-group-item"><strong>Year:</strong> {{ car.year }}</li>
-                                    <li class="list-group-item"><strong>Price:</strong> &#8377;{{ car.price }}</li>
+                                    <li class="list-group-item"><strong>Price:</strong> ₹{{ "{:,}".format(car.price) }}</li>
                                     <li class="list-group-item"><strong>Location:</strong> {{ car.location }}</li>
                                     <li class="list-group-item"><strong>Fuel Type:</strong> {{ car.fuel_type }}</li>
                                     <li class="list-group-item"><strong>Transmission:</strong> {{ car.transmission }}</li>
                                 </ul>
                                 <div class="mt-3">
-                                    <a href="/car_details/{{ car.id }}" class="btn btn-info btn-block">View Details</a>
-                                    <form action="/interaction" method="POST" class="mt-2">
+                                    <a href="/car_details/{{ car.id }}" class="btn btn-info btn-sm w-100 mb-2">View Details</a>
+                                    <form action="/interaction" method="POST" class="d-flex gap-2">
                                         <input type="hidden" name="car_id" value="{{ car.id }}">
-                                        <button type="submit" name="interaction_type" value="like" class="btn btn-success btn-block">Add to Whitelist</button>
-                                        <button type="submit" name="interaction_type" value="shortlist" class="btn btn-warning btn-block">Add to Cart</button>
+                                        <button type="submit" name="interaction_type" value="like" class="btn btn-outline-success btn-sm flex-grow-1">
+                                            <i class="fas fa-heart"></i> Add to Favorites
+                                        </button>
+                                        <button type="submit" name="interaction_type" value="shortlist" class="btn btn-outline-warning btn-sm flex-grow-1">
+                                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -40,9 +126,78 @@
             </div>
         {% else %}
             <div class="alert alert-info" role="alert">
-                No recommendations available at this time. Try interacting with more cars!
+                <h4 class="alert-heading"><i class="fas fa-info-circle"></i> No recommendations available</h4>
+                <p>We don't have any recommendations for you at this time. Here are some things you can do:</p>
+                <ul>
+                    <li>Browse more cars and interact with them</li>
+                    <li>Update your preferences in your profile</li>
+                    <li>Check back later for new recommendations</li>
+                </ul>
             </div>
         {% endif %}
+
+        <div class="mt-4">
+            <a href="/buyer_dashboard" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const carList = document.getElementById('carList');
+            const gridViewBtn = document.getElementById('gridView');
+            const listViewBtn = document.getElementById('listView');
+            const sortSelect = document.getElementById('sortSelect');
+            const filterSelect = document.getElementById('filterSelect');
+
+            gridViewBtn.addEventListener('click', () => {
+                carList.classList.remove('list-view');
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+            });
+
+            listViewBtn.addEventListener('click', () => {
+                carList.classList.add('list-view');
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+            });
+
+            function sortCars() {
+                const cars = Array.from(carList.children);
+                cars.sort((a, b) => {
+                    const aValue = a.querySelector('.card-title').textContent;
+                    const bValue = b.querySelector('.card-title').textContent;
+                    if (sortSelect.value === 'price_asc' || sortSelect.value === 'price_desc') {
+                        const aPrice = parseInt(a.querySelector('.list-group-item:nth-child(2)').textContent.replace(/[^0-9]/g, ''));
+                        const bPrice = parseInt(b.querySelector('.list-group-item:nth-child(2)').textContent.replace(/[^0-9]/g, ''));
+                        return sortSelect.value === 'price_asc' ? aPrice - bPrice : bPrice - aPrice;
+                    } else if (sortSelect.value === 'year_asc' || sortSelect.value === 'year_desc') {
+                        const aYear = parseInt(a.querySelector('.list-group-item:first-child').textContent.split(':')[1]);
+                        const bYear = parseInt(b.querySelector('.list-group-item:first-child').textContent.split(':')[1]);
+                        return sortSelect.value === 'year_asc' ? aYear - bYear : bYear - aYear;
+                    }
+                    return aValue.localeCompare(bValue);
+                });
+                cars.forEach(car => carList.appendChild(car));
+            }
+
+            function filterCars() {
+                const cars = Array.from(carList.children);
+                cars.forEach(car => {
+                    const fuelType = car.querySelector('.list-group-item:nth-child(4)').textContent.split(':')[1].trim();
+                    if (filterSelect.value === '' || fuelType === filterSelect.value) {
+                        car.style.display = '';
+                    } else {
+                        car.style.display = 'none';
+                    }
+                });
+            }
+
+            sortSelect.addEventListener('change', sortCars);
+            filterSelect.addEventListener('change', filterCars);
+        });
+    </script>
 </body>
 </html>

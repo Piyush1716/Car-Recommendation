@@ -12,6 +12,14 @@
             transform: translateY(-5px);
             transition: all 0.3s ease;
         }
+        .view-all-cars {
+            background-color: #6c757d;
+            color: white;
+        }
+        .view-all-cars:hover {
+            background-color: #5a6268;
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -83,7 +91,7 @@
                 <div class="card card-hover">
                     <div class="card-body text-center">
                         <i class="fas fa-fire fa-3x mb-3 text-warning"></i>
-                        <h5 class="card-title">Popular Cars</h5>
+                        <h5 class="card-title">Popular Cars Recommendations</h5>
                         <a href="/popularity_based_recommendations" class="btn btn-warning">View</a>
                     </div>
                 </div>
@@ -91,8 +99,9 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Filter Cars</h5>
+                <a href="/cars" class="btn btn-light">View All Cars</a>
             </div>
             <div class="card-body">
                 <form method="POST" action="/buyer_dashboard" class="row g-3">
@@ -130,7 +139,13 @@
             </div>
         </div>
 
-        <h2 class="mb-3">Top 10 Available Cars</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Top 10 Available Cars</h2>
+            <a href="/cars" class="btn view-all-cars">
+                <i class="fas fa-list"></i> View All Cars with Recommendations
+            </a>
+        </div>
+
         <div class="row">
             {% for car in cars %}
                 <div class="col-md-4 mb-4">
