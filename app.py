@@ -397,17 +397,59 @@ def remove_from_whitelist(car_id):
 
 @app.route('/buyer_car_details/<int:car_id>', methods=['GET'])
 def buyer_car_details(car_id):
-    if 'email' in session :
-        car = Car.query.get_or_404(car_id)  # Fetch car details from the database
-        return render_template('buyer_car_details.html', car=car)
-    
+    if 'email' in session:
+        # Step 1: Fetch the details of the selected car
+        car = Car.query.get_or_404(car_id)
+
+        # Step 2: Fetch all car attributes and create a DataFrame
+        cars = Car.query.all()
+        car_data = [
+            {
+                'id': car.id,
+                'brand_class': car.brand_class,
+                'fuel_type': car.fuel_type,
+                'transmission': car.transmission,
+                'mileage': car.mileage,
+                'price': car.price,
+                'kilometers_driven': car.kilometers_driven,
+                'engine': car.engine,
+                'power': car.power,
+                'seats': car.seats,
+                'age_of_car': car.ageofcar
+            }
+            for car in cars
+        ]
+        car_df = pd.DataFrame(car_data)
+
+        # Step 3: Preprocess data
+        categorical_cols = ['brand_class', 'fuel_type', 'transmission']
+        numerical_cols = ['mileage', 'price', 'kilometers_driven', 'engine', 'power', 'seats', 'age_of_car']
+
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', StandardScaler(), numerical_cols),
+                ('cat', OneHotEncoder(), categorical_cols)
+            ]
+        )
+        car_features = preprocessor.fit_transform(car_df[categorical_cols + numerical_cols])
+
+        # Step 4: Compute similarity matrix
+        similarity_matrix = cosine_similarity(car_features)
+        similarity_df = pd.DataFrame(similarity_matrix, index=car_df['id'], columns=car_df['id'])
+
+        # Step 5: Get similar cars
+        similar_cars_scores = similarity_df[car_id].sort_values(ascending=False)[1:4]  # Top 3 similar cars excluding itself
+        similar_car_ids = similar_cars_scores.index.tolist()
+
+        return render_template('buyer_car_details.html', car=car, similar_car_ids=similar_car_ids)
+
     return redirect(url_for('login'))
 
         # Recommendation moduls
 '''
         1. user based
-Similar User based recommendation Modual
-how works : if two users (A,B) have simiarity in interaction table
+            Similar User based recommendation Modual
+            how works : if two users (A,B) have simiarity in interaction table
             like then have same whitelist and cart
             then A will recommend cars that are in whitelist and cart in user B
             And B will recommend cars that are in whitelist and cart in user A
@@ -542,6 +584,7 @@ def item_based_recommendations():
     recommended_cars = Car.query.filter(Car.id.in_(recommended_car_ids)).all()
 
     return render_template('recommendations.html', cars=recommended_cars)
+    
 '''
         3. content based recommendations
         Content-Based Filtering recommends items similar to those the user 
