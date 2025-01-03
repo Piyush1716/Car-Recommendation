@@ -3,27 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Cars</title>
-    <!-- Bootstrap CSS -->
+    <title>All Cars - Car Recommendation System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .card {
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+    </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/login">Car Recommendation System</a>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/login">
+                <i class="fas fa-car-side me-2"></i>Car Recommendation System
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">All Cars</a>
+                        <a class="nav-link active" href="#"><i class="fas fa-list me-1"></i>All Cars</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/buyer-dashboard">Buyer Dashboard</a>
+                        <a class="nav-link" href="/buyer-dashboard"><i class="fas fa-user me-1"></i>Buyer Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/seller-dashboard">Seller Dashboard</a>
+                        <a class="nav-link" href="/seller-dashboard"><i class="fas fa-store me-1"></i>Seller Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
                     </li>
                 </ul>
             </div>
@@ -31,29 +49,56 @@
     </nav>
 
     <div class="container mt-4">
-        <h1 class="text-center">All Cars</h1>
+        <h1 class="text-center mb-4">All Cars</h1>
 
-        <!-- Displaying the list of cars -->
-        <div class="row">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search cars...">
+            </div>
+            <div class="col-md-4">
+                <select id="sortSelect" class="form-select">
+                    <option value="">Sort by...</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="year_desc">Year: Newest First</option>
+                    <option value="year_asc">Year: Oldest First</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select id="filterSelect" class="form-select">
+                    <option value="">Filter by Fuel Type...</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="carList" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
-            <div class="col-md-4 mb-3">
-                <div class="card">
+            <div class="col">
+                <div class="card h-100">
+                    <img src="{{ car.image_url if car.image_url else '/static/car.png' }}" class="card-img-top" alt="{{ car.model }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ car.model }}</h5>
                         <p class="card-text">
-                            <strong>Year:</strong> {{ car.year }}
-                            &nbsp;&nbsp;
-                            <strong>Price:</strong> &#8377;{{ car.price }}<br>
-
-                            <strong>Fuel Type:</strong> {{ car.fuel_type }}
-                            &nbsp;&nbsp;
-                            <strong>Mileage:</strong> {{ car.mileage }}<br>
-                            
-                            <strong>Seats:</strong> {{ car.seats }}
-                            &nbsp;&nbsp;
-                            <strong>Power:</strong> {{ car.power }}<br>
-                            
+                            <span class="badge bg-primary">{{ car.year }}</span>
+                            <span class="badge bg-success">₹{{ "{:,}".format(car.price) }}</span>
+                            <span class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ car.location }}</span>
                         </p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-gas-pump me-2"></i>{{ car.fuel_type }}</li>
+                            <li class="list-group-item"><i class="fas fa-tachometer-alt me-2"></i>{{ car.mileage }} km/l</li>
+                            <li class="list-group-item"><i class="fas fa-users me-2"></i>{{ car.seats }} seats</li>
+                            <li class="list-group-item"><i class="fas fa-bolt me-2"></i>{{ car.power }} bhp</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/car_details/{{ car.id }}" class="btn btn-primary btn-sm">View Details</a>
+                        <button class="btn btn-outline-success btn-sm float-end" onclick="addToFavorites({{ car.id }})">
+                            <i class="far fa-heart"></i> Add to Favorites
+                        </button>
                     </div>
                 </div>
             </div>
@@ -61,7 +106,54 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const carList = document.getElementById('carList');
+            const searchInput = document.getElementById('searchInput');
+            const sortSelect = document.getElementById('sortSelect');
+            const filterSelect = document.getElementById('filterSelect');
+
+            function filterAndSortCars() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const sortBy = sortSelect.value;
+                const filterBy = filterSelect.value;
+
+                const cars = Array.from(carList.children);
+                cars.forEach(car => {
+                    const title = car.querySelector('.card-title').textContent.toLowerCase();
+                    const fuelType = car.querySelector('.list-group-item:first-child').textContent;
+                    const isVisible = title.includes(searchTerm) && (filterBy === '' || fuelType.includes(filterBy));
+                    car.style.display = isVisible ? '' : 'none';
+                });
+
+                cars.sort((a, b) => {
+                    const aValue = a.querySelector('.card-title').textContent;
+                    const bValue = b.querySelector('.card-title').textContent;
+                    if (sortBy === 'price_asc' || sortBy === 'price_desc') {
+                        const aPrice = parseInt(a.querySelector('.badge.bg-success').textContent.replace(/[^0-9]/g, ''));
+                        const bPrice = parseInt(b.querySelector('.badge.bg-success').textContent.replace(/[^0-9]/g, ''));
+                        return sortBy === 'price_asc' ? aPrice - bPrice : bPrice - aPrice;
+                    } else if (sortBy === 'year_asc' || sortBy === 'year_desc') {
+                        const aYear = parseInt(a.querySelector('.badge.bg-primary').textContent);
+                        const bYear = parseInt(b.querySelector('.badge.bg-primary').textContent);
+                        return sortBy === 'year_asc' ? aYear - bYear : bYear - aYear;
+                    }
+                    return aValue.localeCompare(bValue);
+                });
+
+                cars.forEach(car => carList.appendChild(car));
+            }
+
+            searchInput.addEventListener('input', filterAndSortCars);
+            sortSelect.addEventListener('change', filterAndSortCars);
+            filterSelect.addEventListener('change', filterAndSortCars);
+        });
+
+        function addToFavorites(carId) {
+            // TODO: Implement add to favorites functionality
+            alert('Added car ' + carId + ' to favorites!');
+        }
+    </script>
 </body>
 </html>
