@@ -329,25 +329,71 @@ def view_cart():
         total_price+=car.price
     return render_template('cart.html', cart=cart,total_price = total_price)
 
-# Route to display cart
+# Route to remove car from cart
 @app.route('/remove_from_cart/<int:car_id>', methods=['GET'])
 def remove_from_cart(car_id):
     # Get logged-in user's email
-    if 'email' not in session:
+    if 'email' not in session or not car_id:
         flash("Please log in to view your cart.", "warning")
         return redirect(url_for('login'))
 
     buyer_email = session['email']
-    car = UserCarInteraction.query.filter_by(user_email=buyer_email,car_id=car_id,weight=5).first()
-    db.session.delete(car)
+    try:
+        # handling UserCarInteraction with weight = 10 (cart)
+        interaction = UserCarInteraction.query.filter_by(user_email=buyer_email,car_id=car_id,weight=10).first()
+        if interaction:
+            db.session.delete(interaction)
 
-    car = UserInteraction.query.filter_by(buyer_email=buyer_email,car_id=car_id).first()
-    if car.in_whitelist:
-        car.in_cart = 0
-    else:
-        db.session.delete(car)
-    db.session.commit()
-    return render_template('removed.html',car=car)
+        # handling user interaction table , remove item from cart
+        user_inter = UserInteraction.query.filter_by(buyer_email=buyer_email,car_id=car_id).first()
+        if user_inter:
+            if user_inter.in_whitelist == 1:
+                # if car in whitelist, set in_car = 0
+                user_inter.in_cart = 0
+            else:
+                # if car not whitelist, remove record
+                db.session.delete(user_inter)
+                
+        db.session.commit()
+        flash("Car succesfully removed from Cart!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occurred while removing the car from the cart.", "danger")
+
+    return redirect(url_for('view_cart'))
+
+# Route to remove car from whitelist
+@app.route('/remove_from_whitelist/<int:car_id>', methods=['GET'])
+def remove_from_whitelist(car_id):
+    # Get logged-in user's email
+    if 'email' not in session or not car_id:
+        flash("Please log in to view your whitelist.", "warning")
+        return redirect(url_for('login'))
+
+    buyer_email = session['email']
+    try:
+        # handling UserCarInteraction with weight = 5 (whitelist)
+        interaction = UserCarInteraction.query.filter_by(user_email=buyer_email,car_id=car_id,weight=5).first()
+        if interaction:
+            db.session.delete(interaction)
+
+        # handling user interaction table , remove item from whitelist
+        user_inter = UserInteraction.query.filter_by(buyer_email=buyer_email,car_id=car_id).first()
+        if user_inter:
+            if user_inter.in_cart == 1:
+                # if car in cart, set in_car = 0
+                user_inter.in_whitelist = 0
+            else:
+                # if car not cart, remove record
+                db.session.delete(user_inter)
+                
+        db.session.commit()
+        flash("Car succesfully removed from whitelist!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occurred while removing the car from the whitelist.", "danger")
+
+    return redirect(url_for('view_whitelist'))
 
 @app.route('/buyer_car_details/<int:car_id>', methods=['GET'])
 def buyer_car_details(car_id):
@@ -752,7 +798,6 @@ def seller_dashboard():
 
     return render_template('seller_dashboard.html', cars=cars, total_views=total_views, interested_buyers=interested_buyers,car_views=car_views)
 
-
 @app.route('/delete_car/<int:car_id>', methods=['GET'])
 def delete_car(car_id):
 
@@ -768,12 +813,16 @@ def delete_car(car_id):
     
     # Check if the logged-in user's email matches the car's seller_email
     if car.seller_email != current_seller_email:
+        flash("You do not have permission to delete this car.", "danger")
         abort(403)  # If not, prevent deletion and show 403 Forbidden error
-    
-    # If the emails match, proceed with deletion
-    db.session.delete(car)
-    db.session.commit()
-    flash("Car deleted successfully!", "info")
+    try:
+        # If the emails match, proceed with deletion
+        db.session.delete(car)
+        db.session.commit()
+        flash("Car deleted successfully!", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occured while deleting car.", "danger")
     
     # Redirect back to the seller dashboard
     return redirect(url_for('seller_dashboard'))
@@ -927,14 +976,11 @@ def register():
 
     return render_template('register.html')
 
-
 # Route for logging out
 @app.route('/logout')
 def logout():
     session.clear()  # Clear the session
     return redirect(url_for('login'))  # Redirect to login page
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
