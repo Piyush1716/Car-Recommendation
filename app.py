@@ -116,7 +116,8 @@ def buyer_dashboard():
     if 'email' not in session:
         # If no user is logged in, redirect to login page
         return redirect(url_for('login'))
-
+    if session['role'] != 'buyer':
+        return redirect(url_for('login'))
     # Query all cars and convert to Pandas DataFrame
     cars_query = Car.query.all()
     cars_list = [
@@ -751,7 +752,8 @@ def seller_dashboard():
     if 'email' not in session:
         # If no user is logged in, redirect to login page
         return redirect(url_for('login'))
-    
+    if session['role'] != 'seller':
+        return redirect(url_for('login'))
     seller_email = session['email']  # Get the logged-in user's email
 
     if request.method == 'POST':

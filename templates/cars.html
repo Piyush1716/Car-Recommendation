@@ -35,10 +35,7 @@
                         <a class="nav-link active" href="#"><i class="fas fa-list me-1"></i>All Cars</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/buyer-dashboard"><i class="fas fa-user me-1"></i>Buyer Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/seller-dashboard"><i class="fas fa-store me-1"></i>Seller Dashboard</a>
+                        <a class="nav-link" href="/buyer_dashboard"><i class="fas fa-user me-1"></i>Buyer Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
@@ -95,10 +92,14 @@
                         </ul>
                     </div>
                     <div class="card-footer">
-                        <a href="/car_details/{{ car.id }}" class="btn btn-primary btn-sm">View Details</a>
-                        <button class="btn btn-outline-success btn-sm float-end" onclick="addToFavorites({{ car.id }})">
-                            <i class="far fa-heart"></i> Add to Favorites
-                        </button>
+                        <a href="/buyer_car_details/{{ car.id }}" class="btn btn-primary btn-sm">View Details</a>
+                         <form method="POST" action="/interaction" class="d-inline">
+                            <input type="hidden" name="interaction_type" value="like">
+                            <input type="hidden" name="car_id" value="{{ car.id }}">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-heart"></i> Like
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -149,11 +150,6 @@
             sortSelect.addEventListener('change', filterAndSortCars);
             filterSelect.addEventListener('change', filterAndSortCars);
         });
-
-        function addToFavorites(carId) {
-            // TODO: Implement add to favorites functionality
-            alert('Added car ' + carId + ' to favorites!');
-        }
     </script>
 </body>
 </html>
