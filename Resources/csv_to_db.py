@@ -8,4 +8,4 @@ data = pd.read_csv('used_cars_data_cleaned.csv')  # Or use pd.read_excel for Exc
 engine = create_engine('mysql://root:@localhost/cardb')
 
 # Write the data to a database table
-data.to_sql('cars', con=engine, if_exists='replace', index=False)
+data.to_sql('temp', con=engine, if_exists='replace', index=False)

@@ -46,9 +46,11 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h2 class="card-title">{{ car.model }} <span class="badge bg-primary">{{ car.year }}</span></h2>
-                        <img src="{{'/'+car.image_url}}" alt="{{ car.model }}" class="img-fluid rounded car-image mb-4">
+                        <img src="{{ '/' + (car.image_url if car.image_url else 'static/car.png') }}" alt="{{ car.model }}"
+                            class="img-fluid rounded car-image mb-4">
+
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h3 class="text-primary mb-0">₹{{ "{:,}".format(car.price) }}</h3>
+                            <h3 class="text-primary mb-0">₹{{ "{:,}".format(car.price) }}Lakh</h3>
                             <span class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ car.location }}</span>
                         </div>
                         <div class="row g-3">

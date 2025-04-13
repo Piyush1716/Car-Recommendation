@@ -16,6 +16,21 @@
             max-height: 400px;
             overflow-y: auto;
         }
+        .prediction-card {
+            border: 2px solid #0d6efd;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .prediction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .prediction-icon {
+            font-size: 3rem;
+            color: #0d6efd;
+        }
+        .feature-row {
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -32,6 +47,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/prediction"><i class="fas fa-magic"></i> Price Prediction</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-cog"></i> Settings</a>
@@ -64,6 +82,26 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        <!-- New Prediction Feature Card -->
+        <div class="row feature-row">
+            <div class="col-12">
+                <div class="card prediction-card">
+                    <div class="card-body d-flex flex-column flex-md-row align-items-center">
+                        <div class="text-center me-md-4 mb-3 mb-md-0">
+                            <i class="fas fa-calculator prediction-icon"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h3 class="card-title">AI-Powered Car Price Prediction</h3>
+                            <p class="card-text">Get an accurate estimate of your car's market value using our advanced machine learning model. Make data-driven decisions for pricing your vehicles competitively.</p>
+                            <a href="/prediction" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>Predict Car Price
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-md-4 mb-4">
@@ -107,7 +145,7 @@
                         <input type="number" id="year" name="year" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label for="price" class="form-label">Price (₹)</label>
+                        <label for="price" class="form-label">Price (₹Lakh)</label>
                         <input type="number" id="price" name="price" class="form-control" step="0.01" required>
                     </div>
                     <div class="col-md-6">
@@ -166,10 +204,8 @@
                     <div class="col-md-6">
                         <label for="brand_class" class="form-label">Brand Class</label>
                         <select id="brand_class" name="brand_class" class="form-select" required>
-                            <option value="Luxury">Luxury</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Economy">Economy</option>
-                            <option value="Economy">Performance</option>
+                            <option value="Luxury">Low</option>
+                            <option value="Premium">High</option>
                         </select>
                     </div>
                     <div class="col-12">
@@ -178,6 +214,9 @@
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">Add Car</button>
+                        <a href="/prediction" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-magic me-1"></i>Predict Price First
+                        </a>
                     </div>
                 </form>
             </div>
@@ -209,13 +248,14 @@
                                         <td><img src="{{ car.image_url }}" alt="Car Image" class="car-image rounded"></td>
                                         <td>{{ car.model}} , {{car.id}}</td>
                                         <td>{{ car.year }}</td>
-                                        <td>₹{{ "{:,}".format(car.price) }}</td>
+                                        <td>₹{{car.price }}Lakh</td>
                                         <td>{{ car.fuel_type }}</td>
                                         <td>{{ car.transmission }}</td>
                                         <td>{{ car_views[car.id] }}</td>
                                         <td>
                                             <a href="/edit_car/{{ car.id }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
                                             <a href="/seller_car_details/{{ car.id }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> View</a>
+                                            <a href="/prediction?car_id={{ car.id }}" class="btn btn-info btn-sm"><i class="fas fa-magic"></i> Predict</a>
                                             <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ car.id }}">
                                                 <i class="fas fa-trash-alt"></i> Delete
                                             </button>

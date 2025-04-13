@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session, abort
+from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from flask_mail import Message, Mail
@@ -11,6 +12,11 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
+# Flask-Caching Configuration
+app.config['CACHE_TYPE'] = 'SimpleCache'  # For testing/small apps; use 'RedisCache' or 'MemcachedCache' for production
+app.config['CACHE_DEFAULT_TIMEOUT'] = 3000  # Cache timeout in second
+cache = Cache(app)
 
 # Flask-Mail Configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -169,17 +175,18 @@ def buyer_dashboard():
         email = session['email'],
         name = session['name']
     )
-# To View all Cars
 @app.route('/cars', methods=['GET'])
-def cars():    
+@cache.cached()
+def cars():
     if 'email' not in session:
         return redirect(url_for('login'))
 
-    # Query the cars table
-    cars = Car.query.all()
-    
-    # Pass the cars info to the template
-    return render_template('cars.html', cars=cars)
+    page = request.args.get('page', 1, type=int)
+    per_page = 6  # Number of cars per page
+    cars_paginated = Car.query.paginate(page=page, per_page=per_page)
+
+    return render_template('cars.html', cars=cars_paginated)
+
 
 # Contect seller via Email
 @app.route('/contact_seller', methods=['POST'])
@@ -367,7 +374,7 @@ def remove_from_cart(car_id):
 @app.route('/remove_from_whitelist/<int:car_id>', methods=['GET'])
 def remove_from_whitelist(car_id):
     # Get logged-in user's email
-    if 'email' not in session or not car_id:
+    if 'email' not in session:
         flash("Please log in to view your whitelist.", "warning")
         return redirect(url_for('login'))
 
@@ -840,6 +847,10 @@ def seller_dashboard():
     interested_buyers = total_likes + total_shortlisted
 
     return render_template('seller_dashboard.html', cars=cars, total_views=total_views, interested_buyers=interested_buyers,car_views=car_views)
+
+@app.route('/prediction')
+def prediction():
+    return render_template('prediction.html')
 
 @app.route('/delete_car/<int:car_id>', methods=['GET'])
 def delete_car(car_id):

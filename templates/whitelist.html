@@ -75,11 +75,12 @@
                 {% for car in whitelist %}
                     <div class="col">
                         <div class="card h-100">
-                            <img src="{{ car.image_url }}" class="card-img-top car-image" alt="{{ car.model }}">
+                            <img src="{{ car.image_url if car.image_url else '/static/car.png' }}" class="card-img-top" alt="{{ car.model }}"
+                                loading="lazy">
                             <div class="card-body">
                                 <h5 class="card-title">{{ car.model }} <span class="badge bg-primary">{{ car.year }}</span></h5>
                                 <p class="card-text">
-                                    <strong>Price:</strong> ₹{{ "{:,}".format(car.price) }}<br>
+                                    <strong>Price:</strong> ₹{{ car.price }}Lakh<br>
                                     <strong>Location:</strong> {{ car.location }}<br>
                                     <strong>Fuel Type:</strong> {{ car.fuel_type }}<br>
                                     <strong>Transmission:</strong> {{ car.transmission }}

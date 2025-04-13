@@ -62,7 +62,7 @@
                                     <input type="number" id="year" name="year" class="form-control" value="{{ car.year }}" min="1900" max="{{ current_year }}" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="price" class="form-label">Price (₹)</label>
+                                    <label for="price" class="form-label">Price (₹Lakh)</label>
                                     <input type="number" id="price" name="price" class="form-control" value="{{ car.price }}" min="0" step="0.01" required>
                                 </div>
                                 <div class="col-md-6">
@@ -136,7 +136,9 @@
                                     <input type="file" id="car_image" name="car_image" class="form-control" accept="image/*">
                                     {% if car.image_url %}
                                         <div class="mt-2">
-                                            <img src="{{ '/' + car.image_url }}" alt="Current Car Image" class="img-thumbnail" style="max-width: 200px;">
+                                            <img src="{{ car.image_url if car.image_url else '/static/car.png' }}" class="img-thumbnail mt-2"
+                                                style="max-width: 200px;" alt="Current Car Image" loading="lazy">
+
                                         </div>
                                     {% endif %}
                                 </div>
