@@ -1025,7 +1025,6 @@ def register():
             return redirect('/login')
 
     except Exception as e:
-        logging.error(f"Error during registration: {e}")
         flash("An unexpected error occurred. Please try again later.", "danger")
 
     return render_template('register.html')
